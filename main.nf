@@ -1,11 +1,9 @@
 #!/usr/bin/env nextflow
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    nf-core/rnaaln
+    nfcore/rnaaln
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/nf-core/rnaaln
-    Website: https://nf-co.re/rnaaln
-    Slack  : https://nfcore.slack.com/channels/rnaaln
+    Github : https://github.com/nfcore/rnaaln
 ----------------------------------------------------------------------------------------
 */
 
@@ -13,96 +11,64 @@ nextflow.enable.dsl = 2
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-include { RNAALN  } from './workflows/rnaaln'
-include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_rnaaln_pipeline'
-include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_rnaaln_pipeline'
-
-include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_rnaaln_pipeline'
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     GENOME PARAMETER VALUES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// TODO nf-core: Remove this line if you don't need a FASTA file
-//   This is an example of how to use getGenomeAttribute() to fetch parameters
-//   from igenomes.config using `--genome`
-params.fasta = getGenomeAttribute('fasta')
+params.study_id                    = WorkflowMain.getGenomeAttribute(params, 'study_id')
+params.analysis_id                 = WorkflowMain.getGenomeAttribute(params, 'analysis_id')
+params.samplesheet                  = WorkflowMain.getGenomeAttribute(params, 'samplesheet')
 
+params.reference_fasta             = WorkflowMain.getGenomeAttribute(params, 'reference_fasta')
+params.reference_fasta_secondary   = WorkflowMain.getGenomeAttribute(params, 'reference_fasta_secondary')
+
+params.api_token                   = WorkflowMain.getGenomeAttribute(params, 'api_token')
+params.score_url_upload            = WorkflowMain.getGenomeAttribute(params, 'score_url_upload')
+params.song_url_upload             = WorkflowMain.getGenomeAttribute(params, 'song_url_upload')
+params.score_url_download          = WorkflowMain.getGenomeAttribute(params, 'score_url_download')
+params.song_url_download           = WorkflowMain.getGenomeAttribute(params, 'song_url_download')
+params.score_url                   = WorkflowMain.getGenomeAttribute(params, 'score_url')
+params.song_url                    = WorkflowMain.getGenomeAttribute(params, 'song_url')
+
+params.tools                       = WorkflowMain.getGenomeAttribute(params, 'tools')
+params.outdir                      = WorkflowMain.getGenomeAttribute(params, 'outdir')
+
+params.local_mode                  = WorkflowMain.getGenomeAttribute(params, 'local_mode')
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    NAMED WORKFLOWS FOR PIPELINE
+    VALIDATE & PRINT PARAMETER SUMMARY
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+WorkflowMain.initialise(workflow, params, log)
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    NAMED WORKFLOW FOR PIPELINE
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+include { RNAALN } from './workflows/rnaaln'
+
 //
-// WORKFLOW: Run main analysis pipeline depending on type of input
+// WORKFLOW: Run main nfcore/dnaseqaln analysis pipeline
 //
 workflow NFCORE_RNAALN {
-
-    take:
-    samplesheet // channel: samplesheet read in from --input
-
-    main:
-
-    //
-    // WORKFLOW: Run pipeline
-    //
-    RNAALN (
-        samplesheet
-    )
-
-    emit:
-    multiqc_report = RNAALN.out.multiqc_report // channel: /path/to/multiqc_report.html
-
+    RNAALN ()
 }
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    RUN MAIN WORKFLOW
+    RUN ALL WORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+//
+// WORKFLOW: Execute a single named workflow for the pipeline
+// See: https://github.com/nf-core/rnaseq/issues/619
+//
 workflow {
-
-    main:
-
-    //
-    // SUBWORKFLOW: Run initialisation tasks
-    //
-    PIPELINE_INITIALISATION (
-        params.version,
-        params.help,
-        params.validate_params,
-        params.monochrome_logs,
-        args,
-        params.outdir,
-        params.input
-    )
-
-    //
-    // WORKFLOW: Run main workflow
-    //
-    NFCORE_RNAALN (
-        PIPELINE_INITIALISATION.out.samplesheet
-    )
-
-    //
-    // SUBWORKFLOW: Run completion tasks
-    //
-    PIPELINE_COMPLETION (
-        params.email,
-        params.email_on_fail,
-        params.plaintext_email,
-        params.outdir,
-        params.monochrome_logs,
-        params.hook_url,
-        NFCORE_RNAALN.out.multiqc_report
-    )
+    NFCORE_RNAALN ()
 }
 
 /*
