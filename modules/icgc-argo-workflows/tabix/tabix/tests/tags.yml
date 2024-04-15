@@ -1,0 +1,2 @@
+tabix/tabix:
+  - "modules/icgc-argo-workflows/tabix/tabix/**"
