@@ -1,0 +1,3 @@
+analysis_type,study_id,patient,sex,status,sample,lane,fastq_1,fastq_2,library_name,platform_unit,platform,sequencing_center,sequencing_date,platform_model,single_end,read_group_count,experiment,analysis_json
+rna_sequencing_experiment,TEST-PRO,DO001,male,tumor,SA002,S02L1,test/data/sample_02_L1_1.fastq.gz,test/data/sample_02_L1_2.fastq.gz,sim01,sim01,ILLUMINA,SIM,2021-04-21,Polyester,False,2,TEST_EXP,test/data/test-job-4.payload.json
+rna_sequencing_experiment,TEST-PRO,DO001,male,tumor,SA002,S02L2,test/data/sample_02_L2_1.fastq.gz,test/data/sample_02_L2_2.fastq.gz,sim01,sim01,ILLUMINA,SIM,2021-04-21,Polyester,False,2,TEST_EXP,test/data/test-job-4.payload.json
