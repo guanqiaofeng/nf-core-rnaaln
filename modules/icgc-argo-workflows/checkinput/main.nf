@@ -18,7 +18,7 @@ process CHECKINPUT {
     when:
     task.ext.when == null || task.ext.when
 
-    script: 
+    script:
     """
     case '$workflow_name' in
     'Pre Alignment QC')
@@ -34,6 +34,11 @@ process CHECKINPUT {
         ;;
     'DNA Alignment')
         dnaaln.py \\
+            $samplesheet \\
+            samplesheet.valid.csv
+        ;;
+    'RNA Alignment')
+        rnaaln.py \\
             $samplesheet \\
             samplesheet.valid.csv
         ;;
