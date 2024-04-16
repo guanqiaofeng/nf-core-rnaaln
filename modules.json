@@ -85,6 +85,11 @@
                         "git_sha": "f4ae1d942bd50c5c0b9bd2de1393ce38315ba57c",
                         "installed_by": ["modules"]
                     },
+                    "hisat2/align": {
+                        "branch": "master",
+                        "git_sha": "400037f54de4b0c42712ec5a499d9fd9e66250d1",
+                        "installed_by": ["modules"]
+                    },
                     "multiqc": {
                         "branch": "master",
                         "git_sha": "b7ebe95761cd389603f9cc0e0dc384c0f663815a",
