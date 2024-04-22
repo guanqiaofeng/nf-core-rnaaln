@@ -27,14 +27,27 @@ process HISAT2_ALIGN {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def VERSION = '2.2.1' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
 
-    def strandedness = ''
-    if (meta.strandedness == 'forward') {
-        strandedness = meta.single_end ? '--rna-strandness F' : '--rna-strandness FR'
-    } else if (meta.strandedness == 'reverse') {
+    def strandedness = '' // Strandedness is updated for ICGC ARGO, as only 4 entries are allowed "UNSTRANDED, FIRST_READ_SENSE_STRAND, FIRST_READ_ANTISENSE_STRAND, or empty(null)"
+    if (meta.library_strandedness == 'FIRST_READ_SENSE_STRAND') {
+    strandedness = meta.single_end ? '--rna-strandness F' : '--rna-strandness FR'
+    } else if (meta.library_strandedness == 'FIRST_READ_ANTISENSE_STRAND') {
         strandedness = meta.single_end ? '--rna-strandness R' : '--rna-strandness RF'
+    } else {
+        strandedness = ''  // Handle both UNSTRANDED and null the same way
     }
+
     ss = "$splicesites" ? "--known-splicesite-infile $splicesites" : ''
-    def seq_center = params.seq_center ? "--rg-id ${prefix} --rg SM:$prefix --rg CN:${params.seq_center.replaceAll('\\s','_')}" : "--rg-id ${prefix} --rg SM:$prefix"
+
+    //def seq_center = params.sequencing_center ? "--rg-id ${prefix} --rg SM:$prefix --rg CN:${params.sequencing_center.replaceAll('\\s','_')}" : "--rg-id ${prefix} --rg SM:$prefix"
+    def seq_center = ''
+    if (meta.containsKey('sequencing_center') && meta.sequencing_center) {
+        // Replaces spaces with underscores in the sequencing center's name and constructs the read group string.
+        seq_center = "--rg-id ${prefix} --rg SM:$prefix --rg CN:${meta.sequencing_center.replaceAll('\\s','_')}"
+    } else {
+        // Default read group string when no sequencing center is specified.
+        seq_center = "--rg-id ${prefix} --rg SM:$prefix"
+    }
+
     if (meta.single_end) {
         def unaligned = params.save_unaligned ? "--un-gz ${prefix}.unmapped.fastq.gz" : ''
         """
@@ -74,7 +87,8 @@ process HISAT2_ALIGN {
             --no-mixed \\
             --no-discordant \\
             $args \\
-            | samtools view -bS -F 4 -F 8 -F 256 - > ${prefix}.bam
+            | samtools view -bS -F 4 -F 8 -F 256 - \
+            | samtools sort -o ${prefix}.bam
 
         if [ -f ${prefix}.unmapped.fastq.1.gz ]; then
             mv ${prefix}.unmapped.fastq.1.gz ${prefix}.unmapped_1.fastq.gz

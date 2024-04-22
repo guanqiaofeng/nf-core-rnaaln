@@ -181,8 +181,8 @@ analysis_type,study_id,patient,sex,status,sample,lane,fastq_1,fastq_2,read_group
         """Assert that expected analysis is correct."""
         if len(row[self._analysis_type_col]) <= 0:
             raise AssertionError("'analysis_type' input is required.")
-        if row[self._analysis_type_col]!="sequencing_experiment":
-            raise AssertionError("analysis_type for \"DNA Alignment\" should be  \"sequencing_experiment\"")
+        if row[self._analysis_type_col]!="rna_sequencing_experiment":
+            raise AssertionError("analysis_type for \"RNA Alignment\" should be  \"rna_sequencing_experiment\"")
 
     def _validate_study_id(self, row):
         """Assert that expected study_id is correct."""
@@ -377,7 +377,7 @@ def sniff_format(handle):
 
 
 def check_samplesheet(file_in, file_out):
-    required_columns = {"sample","lane","fastq_1","fastq_2","single_end","read_group_count","library_name","platform_unit"}
+    required_columns = {"sample","lane","fastq_1","fastq_2","single_end","read_group_count","library_name","platform_unit","library_strandedness"}
     conditional_columns = {"study_id","sex","patient","status","experiment","analysis_json","platform","sequencing_center","sequencing_date","platform_model"}
 
     # See https://docs.python.org/3.9/library/csv.html#id3 to read up on `newline=""`.

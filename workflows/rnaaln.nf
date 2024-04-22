@@ -7,7 +7,7 @@
  include { STAGE_INPUT } from '../subworkflows/icgc-argo-workflows/stage_input/main'
  include { SONG_SCORE_DOWNLOAD } from '../subworkflows/icgc-argo-workflows/song_score_download/main'
  include { SONG_SCORE_UPLOAD } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
- include { FASTQ_ALIGN_HISAT2 } from '../subworkflows/nf-core/fastq_align_hisat2/main'
+ include { HISAT2_ALIGN } from '../modules/nf-core/hisat2/align/main'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -26,34 +26,30 @@ workflow RNAALN {
 
     STAGE_INPUT.out.meta_files.subscribe { println("Meta Files Output: ${it}") }
 
-    def indexInput = STAGE_INPUT.out.meta_files.map { meta, files ->
-        [meta, params.reference_h2_index]
-    }
+    // index = Channel.fromPath(params.hisat2_index)
+    //             .map { path -> [ [id: 'index'], path ] }
 
-    indexInput.subscribe { println("Index Input: ${it}") }
+    // splicesites = Channel.fromPath(params.reference_splicesites)
+    //                 .map { path -> [ [id: 'splicesites'], path ] }
 
-    def splicesitesInput = STAGE_INPUT.out.meta_files.map { meta, files ->
-        [meta, params.reference_splicesites]
-    }
+    // ch_fasta = Channel.fromPath(params.reference_fasta)
+    //             .map { path -> [ [id: 'fasta'], path ] }
 
-    splicesitesInput.subscribe { println("Splice Input: ${it}") }
 
-    //Perform HISAT2 alignment
-    HISAT2( //[val(meta), [path(file1),path(file2)]],[val(meta),[path(fileA),path(fileB)]]
-            STAGE_INPUT.out.meta_files,
-            indexInput,
-            splicesitesInput
-        )
-        ch_versions = ch_versions.mix(HISAT2.out.versions)
 
-    // //Perform HISAT2 alignment,make payload and upload
-    // if (params.tools.split(',').contains('hisat2_aln')){
-    //     //Perform Alignment per Read group
-    //     BWAMEM2( //[val(meta), [path(file1),path(file2)]],[val(meta),[path(fileA),path(fileB)]]
-    //         STAGE_INPUT.out.meta_files,
-    //         reference_files_M2
-    //     )
-    //     ch_versions = ch_versions.mix(BWAMEM2.out.versions)
+    // // Create a channel that emits a list with one element (the fasta file path)
+    // // ch_fasta = Channel.value([file(params.reference_fasta)])
+
+    // // println("HISAT2 index path: ${params.hisat2_index}")
+    // // println("splicesites path: ${params.reference_splicesites}")
+
+    // index.subscribe { println("Index Files Output: ${it}") }
+    // splicesites.subscribe { println("Splice Files Output: ${it}") }
+    // ch_fasta.subscribe { println("Fasta Files Output: ${it}") }
+
+    // Resolve the actual index files
+    // indexFiles = Channel.value(params.hisat2_index)
+
 
     emit:
     meta_analysis = STAGE_INPUT.out.meta_analysis // channel: /path/to/multiqc_report.html
