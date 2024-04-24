@@ -50,11 +50,12 @@ class RowChecker:
         read_group_count_col = 'read_group_count',
         experiment_col = 'experiment',
         analysis_json_col = 'analysis_json',
+        library_strandedness_col = 'library_strandedness',
         **kwargs,
     ):
         """
         Initialize the row checker with the expected column names.
-analysis_type,study_id,patient,sex,status,sample,lane,fastq_1,fastq_2,read_group,single_end,read_group_count,analysis_json
+        analysis_type,study_id,patient,sex,status,sample,lane,fastq_1,fastq_2,read_group,single_end,read_group_count,analysis_json,library_strandedness
         Args:
             sample_col (str): The name of the column that contains the sample name
                 (default "sample").
@@ -87,6 +88,7 @@ analysis_type,study_id,patient,sex,status,sample,lane,fastq_1,fastq_2,read_group
         self._read_group_count_col = read_group_count_col
         self._experiment_col = experiment_col
         self._analysis_json_col = analysis_json_col
+        self._library_strandedness_col = library_strandedness_col
         self._seen = []
         self.modified = []
 
@@ -120,6 +122,7 @@ analysis_type,study_id,patient,sex,status,sample,lane,fastq_1,fastq_2,read_group
         self._validate_read_group_count(row)
         self._validate_experiment(row) if row.get(self._experiment_col) else ""
         self._validate_analysis_json(row) if row.get(self._analysis_json_col) else ""
+        self._validate_library_strandedness_col(row)
 
         tmp_dict={
             "analysis_type" : row[self._analysis_type_col] if row.get(self._analysis_type_col) else "sequencing_experiment",
@@ -134,8 +137,16 @@ analysis_type,study_id,patient,sex,status,sample,lane,fastq_1,fastq_2,read_group
             "single_end" : row[self._single_end_col].lower(),
             "read_group_count" : row[self._read_group_count_col],
             "experiment" : row[self._experiment_col] if row.get(self._experiment_col) else "WGS",
-            "analysis_json": row[self._analysis_json_col] if row.get(self._analysis_json_col) else None
+            "analysis_json" : row[self._analysis_json_col] if row.get(self._analysis_json_col) else None,
+            "sequencing_center" : row[self._sequencing_center_col] if row.get(self._sequencing_center_col) else None,
+            "library_strandedness": row[self._library_strandedness_col] if row.get(self._library_strandedness_col) else None
             }
+
+        # Transform 'library_strandedness' based on its value after dictionary creation
+        if tmp_dict['library_strandedness'] == "FIRST_READ_SENSE_STRAND":
+            tmp_dict['library_strandedness'] = "forward"
+        elif tmp_dict['library_strandedness'] == "FIRST_READ_ANTISENSE_STRAND":
+            tmp_dict['library_strandedness'] = "reverse"
 
         read_group_info=[]
         description=[]
@@ -181,8 +192,8 @@ analysis_type,study_id,patient,sex,status,sample,lane,fastq_1,fastq_2,read_group
         """Assert that expected analysis is correct."""
         if len(row[self._analysis_type_col]) <= 0:
             raise AssertionError("'analysis_type' input is required.")
-        if row[self._analysis_type_col]!="rna_sequencing_experiment":
-            raise AssertionError("analysis_type for \"RNA Alignment\" should be  \"rna_sequencing_experiment\"")
+        if row[self._analysis_type_col]!="sequencing_experiment":
+            raise AssertionError("analysis_type for \"RNA Alignment\" should be  \"sequencing_experiment\"")
 
     def _validate_study_id(self, row):
         """Assert that expected study_id is correct."""
@@ -297,6 +308,11 @@ analysis_type,study_id,patient,sex,status,sample,lane,fastq_1,fastq_2,read_group
         """Assert that expected sequencing_center is correct."""
         if len(row[self._sequencing_center_col]) <= 0:
             raise AssertionError("'sequencing_center' input is required.")
+
+    def _validate_library_strandedness_col(self, row):
+        """Assert that expected strandedness is correct"""
+        if len(row[self._library_strandedness_col]) <= 0:
+            raise AssertionError("'library_strandedness' input in required")
 
     def _validate_sequencing_date_col(self, row):
         """Assert that expected sequencing_date is correct."""
