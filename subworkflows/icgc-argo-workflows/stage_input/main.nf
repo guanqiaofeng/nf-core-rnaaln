@@ -63,7 +63,7 @@ workflow STAGE_INPUT {
     .collectFile(keepHeader: true, name: 'sample_sheet.csv')
     .splitCsv(header:true)
     .map{ row ->
-        if (row.analysis_type == "sequencing_experiment" && row.experiment == "RNA-seq" && row.single_end.toLowerCase() == 'false') {
+        if (row.analysis_type == "sequencing_experiment" && row.experiment == "RNA-Seq" && row.single_end.toLowerCase() == 'false') {
             tuple([
                 analysis_type : row.analysis_type,
                 id:"${row.sample}-${row.lane}".toString(),
@@ -83,7 +83,7 @@ workflow STAGE_INPUT {
             [file(row.fastq_1,checkIfExists: true), file(row.fastq_2,checkIfExists: true)],
             row.analysis_json
             )
-        } else if (row.analysis_type == "sequencing_experiment" && row.experiment == "RNA-seq" && row.single_end.toLowerCase() == 'true') {
+        } else if (row.analysis_type == "sequencing_experiment" && row.experiment == "RNA-Seq" && row.single_end.toLowerCase() == 'true') {
             tuple([
                 analysis_type : row.analysis_type,
                 id:"${row.sample}-${row.lane}".toString(),
