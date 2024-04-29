@@ -15,8 +15,10 @@ process HISAT2_ALIGN {
 
     output:
     tuple val(meta), path("*.bam")                   , emit: bam
-    tuple val(meta), path("*.log")                   , emit: summary
+    tuple val(meta), path("*_summary.txt")           , emit: summary
     tuple val(meta), path("*fastq.gz"), optional:true, emit: fastq
+    tuple val(meta), path("*_metrics.txt")           , emit: metrix
+    tuple val(meta), path("*.novel_splicesites.txt") , emit: novel_splice
     path  "versions.yml"                             , emit: versions
 
     when:
@@ -24,70 +26,32 @@ process HISAT2_ALIGN {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}" // meta.id: SA001-SO1L1 sample-readGroup
     def VERSION = '2.2.1' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
+    def strandedness = meta.strandedness == 'forward' ? meta.single_end ? '--rna-strandness F' : '--rna-strandness FR' : meta.strandedness == 'reverse' ? meta.single_end ? '--rna-strandness R' : '--rna-strandness RF' : ''
+    def seq_center = meta?.sequencing_center ? "--rg-id ${prefix} --rg SM:$prefix --rg CN:${meta.sequencing_center.replaceAll('\\s','_')}" : "--rg-id ${prefix} --rg SM:$prefix"
 
-    def strandedness = ''
-    if (meta.strandedness == 'forward') {
-        strandedness = meta.single_end ? '--rna-strandness F' : '--rna-strandness FR'
-    } else if (meta.strandedness == 'reverse') {
-        strandedness = meta.single_end ? '--rna-strandness R' : '--rna-strandness RF'
-    }
-    ss = "$splicesites" ? "--known-splicesite-infile $splicesites" : ''
-    def seq_center = params.seq_center ? "--rg-id ${prefix} --rg SM:$prefix --rg CN:${params.seq_center.replaceAll('\\s','_')}" : "--rg-id ${prefix} --rg SM:$prefix"
-    if (meta.single_end) {
-        def unaligned = params.save_unaligned ? "--un-gz ${prefix}.unmapped.fastq.gz" : ''
-        """
-        INDEX=`find -L ./ -name "*.1.ht2" | sed 's/\\.1.ht2\$//'`
-        hisat2 \\
-            -x \$INDEX \\
-            -U $reads \\
-            $strandedness \\
-            $ss \\
-            --summary-file ${prefix}.hisat2.summary.log \\
-            --threads $task.cpus \\
-            $seq_center \\
-            $unaligned \\
-            $args \\
-            | samtools view -bS -F 4 -F 256 - > ${prefix}.bam
+    """
+    INDEX=\$(find -L ${index} -name "*.1.ht2" | sed 's/\\.1.ht2\$//')
+    hisat2 \\
+        -t -q \\
+        -x \$INDEX \\
+        -p $task.cpus \\
+        ${meta.single_end ? "-U $reads" : "-1 ${reads[0]} -2 ${reads[1]}"} \\
+        $strandedness \\
+        --min-intronlen 20 \\
+        --max-intronlen 500000 \\
+        --met-file ${prefix}_metrics.txt \\
+        --summary-file ${prefix}_summary.txt \\
+        --new-summary \\
+        --known-splicesite-infile $splicesites \\
+        --novel-splicesite-outfile ${prefix}.novel_splicesites.txt \\
+        -k 20 --secondary \\
+        -I 50 -X 800 \\
+        $seq_center \\
+        $args \\
+        | samtools view -bS --no-PG -o ${prefix}.hisat2_Aligned.out.bam -
 
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            hisat2: $VERSION
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-        END_VERSIONS
-        """
-    } else {
-        def unaligned = params.save_unaligned ? "--un-conc-gz ${prefix}.unmapped.fastq.gz" : ''
-        """
-        INDEX=`find -L ./ -name "*.1.ht2" | sed 's/\\.1.ht2\$//'`
-        hisat2 \\
-            -x \$INDEX \\
-            -1 ${reads[0]} \\
-            -2 ${reads[1]} \\
-            $strandedness \\
-            $ss \\
-            --summary-file ${prefix}.hisat2.summary.log \\
-            --threads $task.cpus \\
-            $seq_center \\
-            $unaligned \\
-            --no-mixed \\
-            --no-discordant \\
-            $args \\
-            | samtools view -bS -F 4 -F 8 -F 256 - > ${prefix}.bam
-
-        if [ -f ${prefix}.unmapped.fastq.1.gz ]; then
-            mv ${prefix}.unmapped.fastq.1.gz ${prefix}.unmapped_1.fastq.gz
-        fi
-        if [ -f ${prefix}.unmapped.fastq.2.gz ]; then
-            mv ${prefix}.unmapped.fastq.2.gz ${prefix}.unmapped_2.fastq.gz
-        fi
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            hisat2: $VERSION
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-        END_VERSIONS
-        """
-    }
+    echo "hisat2: $VERSION\nsamtools: \$(samtools --version | sed 's/^.*samtools //; s/Using.*\$//')" > versions.yml
+    """
 }

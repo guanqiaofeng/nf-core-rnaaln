@@ -29,13 +29,23 @@ workflow RNAALN {
     // index = Channel.fromPath(params.hisat2_index)
     //             .map { path -> [ [id: 'index'], path ] }
 
-    // splicesites = Channel.fromPath(params.reference_splicesites)
-    //                 .map { path -> [ [id: 'splicesites'], path ] }
+    index = Channel.fromPath(params.hisat2_index)
+                .map { path ->
+                    println("Resolved HISAT2 index path: $path")
+                    return [ [id: 'index'], path ]
+                }
 
-    // ch_fasta = Channel.fromPath(params.reference_fasta)
-    //             .map { path -> [ [id: 'fasta'], path ] }
+    splicesites = Channel.fromPath(params.reference_splicesites)
+                    .map { path -> [ [id: 'splicesites'], path ] }
 
+    ch_fasta = Channel.fromPath(params.reference_fasta)
+                .map { path -> [ [id: 'fasta'], path ] }
 
+    HISAT2_ALIGN(
+        STAGE_INPUT.out.meta_files,
+        index,
+        splicesites
+    )
 
     // // Create a channel that emits a list with one element (the fasta file path)
     // // ch_fasta = Channel.value([file(params.reference_fasta)])
