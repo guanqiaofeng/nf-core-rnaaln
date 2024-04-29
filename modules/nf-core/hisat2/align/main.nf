@@ -50,8 +50,14 @@ process HISAT2_ALIGN {
         -I 50 -X 800 \\
         $seq_center \\
         $args \\
-        | samtools view -bS --no-PG -o ${prefix}.hisat2_Aligned.out.bam -
+        | samtools view -bS --no-PG - \\
+        | samtools sort -o ${prefix}.hisat2_Aligned.bam -
+
+    sort -k1,1 -k2,3n -k4,4 -u ${prefix}.novel_splicesites.txt > ${prefix}.hisat2.novel_splicesites.txt
+    rm ${prefix}.novel_splicesites.txt
 
     echo "hisat2: $VERSION\nsamtools: \$(samtools --version | sed 's/^.*samtools //; s/Using.*\$//')" > versions.yml
     """
 }
+
+// currently missing one step of merging multiple bams into one bam if same sample
