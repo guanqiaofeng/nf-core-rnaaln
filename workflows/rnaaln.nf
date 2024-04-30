@@ -18,6 +18,7 @@ workflow RNAALN {
 
     ch_versions = Channel.empty()
 
+    // Validate input, generate metadata, prepare fastq channel
     STAGE_INPUT(
         params.study_id,
         params.analysis_id,
@@ -26,67 +27,10 @@ workflow RNAALN {
 
     // STAGE_INPUT.out.meta_files.subscribe { println("Meta Files Output: ${it}") }
 
-    // STAGE_INPUT.out.meta_files
-    //     .map{ meta, fastq -> [
-    //         [
-    //             analysis_type:"${meta.analysis_type}",
-    //             id:"${meta.study_id}.${meta.patient}.${meta.sample}",
-    //             study_id:"${meta.study_id}"
-    //             patient:"${meta.patient}"
-    //             sex:"${meta.sex}"
-    //             status:"${meta.status}"
-    //             sample:"${meta.sample}"
-    //             read_group:"${meta1.id}.${meta2.id}"
-    //             data_type:"${meta.data_type}"
-    //             numLanes:"${meta.numLanes}"
-    //             experiment:"${meta.experiment}"
-    //             single_end:"${meta.single_end}"
-    //             sequencing_center:"${meta.sequencing_center}"
-    //             library_strandedness:"${meta.library_strandedness}"
-    //         ]
-    //         , fastq
-    //     ]
-
-    //     }
-
-    // STAGE_INPUT.out.meta_files
-    // .map { tuple ->
-    //     def meta = tuple[0]
-    //     def fastq = tuple[1]
-    //     // Assuming the 'id' format always contains the part before '-' as you need
-    //     def laneId = meta.id.split('-')[1]
-    //     return [
-    //         meta: [
-    //             analysis_type: meta.analysis_type,
-    //             id: "${meta.study_id}.${meta.patient}.${meta.sample}",
-    //             study_id: meta.study_id,
-    //             patient: meta.patient,
-    //             sex: meta.sex,
-    //             status: meta.status,
-    //             sample: meta.sample,
-    //             read_group: laneId,  // Extracted part of the ID for read_group
-    //             data_type: meta.data_type,
-    //             numLanes: meta.numLanes,
-    //             experiment: meta.experiment,
-    //             single_end: meta.single_end,
-    //             sequencing_center: meta.sequencing_center,
-    //             library_strandedness: meta.library_strandedness
-    //         ],
-    //         fastq: fastq
-    //     ]
-    // }
-    // .collect()
-    // .map { allItems ->
-    //     def allMetadata = allItems.collect { it.meta }
-    //     def allFastqs = allItems.collect { it.fastq }
-    //     def combinedLaneIds = allMetadata.collect { it.read_group }.join(',')
-    //     allMetadata.each { meta ->
-    //         meta.read_group = combinedLaneIds
-    //     }
-    //     [allMetadata, allFastqs.transpose()]
-    // }
-    // .subscribe { println("Reformatted Output: ${it}") }
-
+    // Reformat fastq file channel for input to HISAT2_ALIGN
+    // Original: [[meta1, [fastq1-1, fastq1-2]], [meta2, [fastq2-1, fastq2-2]]]
+    // Transformed: [meta, [fastq1-1, fastq2-1, fastq1-2, fastq2-2]]
+    // future work: need to handle readgroup information in the bam files in HISAT2_ALIGN
     STAGE_INPUT.out.meta_files
     .map { tuple ->
         def meta = tuple[0]
@@ -125,9 +69,9 @@ workflow RNAALN {
         tuple(meta, fastqPaths)}
     .set{ch_fastq}
 
+    // ch_fastq.subscribe { println("Reformatted Output: ${it}") }
 
-    ch_fastq.subscribe { println("Reformatted Output: ${it}") }
-
+    // HISAT2_ALIGN
     index = Channel.fromPath(params.hisat2_index).collect()
                 .map { path -> [ [id: 'index'], path ] }
 
@@ -142,6 +86,10 @@ workflow RNAALN {
         index,
         splicesites
     )
+
+    HISAT2_ALIGN.out.bam.subscribe { println("Bam Output: ${it}") }
+    //Markduplicate
+
 
     emit:
     meta_analysis = STAGE_INPUT.out.meta_analysis // channel: /path/to/multiqc_report.html
