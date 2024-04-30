@@ -139,7 +139,9 @@ class RowChecker:
             "experiment" : row[self._experiment_col] if row.get(self._experiment_col) else "WGS",
             "analysis_json" : row[self._analysis_json_col] if row.get(self._analysis_json_col) else None,
             "sequencing_center" : row[self._sequencing_center_col] if row.get(self._sequencing_center_col) else None,
-            "library_strandedness": row[self._library_strandedness_col] if row.get(self._library_strandedness_col) else None
+            "library_strandedness": row[self._library_strandedness_col] if row.get(self._library_strandedness_col) else None,
+            "platform": row[self._platform_col] if row.get(self._platform_col) else None,
+            "sequencing_date": row[self._sequencing_date_col] if row.get(self._sequencing_date_col) else None
             }
 
         # Transform 'library_strandedness' based on its value after dictionary creation

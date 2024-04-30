@@ -27,7 +27,7 @@ workflow RNAALN {
         )
 
     ch_versions = ch_versions.mix(STAGE_INPUT.out.versions)
-    // STAGE_INPUT.out.meta_files.subscribe { println("Meta Files Output: ${it}") }
+    STAGE_INPUT.out.meta_files.subscribe { println("Meta Files Output: ${it}") }
 
     // Reformat fastq file channel for input to HISAT2_ALIGN
     // Original: [[meta1, [fastq1-1, fastq1-2]], [meta2, [fastq2-1, fastq2-2]]]
@@ -53,7 +53,9 @@ workflow RNAALN {
                 experiment: meta.experiment,
                 single_end: meta.single_end,
                 sequencing_center: meta.sequencing_center,
-                library_strandedness: meta.library_strandedness
+                library_strandedness: meta.library_strandedness,
+                platform: meta.platform,
+                sequencing_date: meta.sequencing_date
             ],
             fastq: fastq
         ]
@@ -81,6 +83,29 @@ workflow RNAALN {
 
         splicesites = Channel.fromPath(params.reference_splicesites).collect()
                     .map { path -> [ [id: 'splicesites'], path ] }
+
+        ch_fasta = Channel.fromPath(params.reference_fasta).collect()
+                .map { path -> [ [id: 'fasta'], path ] }
+
+        HISAT2_ALIGN(
+            ch_fastq,
+            index,
+            splicesites
+        )
+
+        ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions)
+
+        HISAT2_ALIGN.out.bam.subscribe { println("Bam Output: ${it}") }
+    }
+
+    // STAR_ALIGN
+    if (params.tools.split(',').contains('star_aln')){
+
+        index = Channel.fromPath(params.star_index).collect()
+                .map { path -> [ [id: 'index'], path ] }
+
+        gtf = Channel.fromPath(params.reference_gtf).collect()
+                    .map { path -> [ [id: 'gtf'], path ] }
 
         ch_fasta = Channel.fromPath(params.reference_fasta).collect()
                 .map { path -> [ [id: 'fasta'], path ] }
