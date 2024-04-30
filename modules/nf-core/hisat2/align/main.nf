@@ -9,7 +9,7 @@ process HISAT2_ALIGN {
         'biocontainers/mulled-v2-a97e90b3b802d1da3d6958e0867610c718cb5eb1:2cdf6bf1e92acbeb9b2834b1c58754167173a410-0' }"
 
     input:
-    tuple val(meta), path(reads)
+    tuple val(meta), path(reads) //reads may contain multiple pairs of fastq: [fastq1_1, fastq2_1, fastq1_2, fastq2_2]
     tuple val(meta2), path(index)
     tuple val(meta3), path(splicesites)
 
@@ -31,13 +31,18 @@ process HISAT2_ALIGN {
     def strandedness = meta.strandedness == 'forward' ? meta.single_end ? '--rna-strandness F' : '--rna-strandness FR' : meta.strandedness == 'reverse' ? meta.single_end ? '--rna-strandness R' : '--rna-strandness RF' : ''
     def seq_center = meta?.sequencing_center ? "--rg-id ${prefix} --rg SM:$prefix --rg CN:${meta.sequencing_center.replaceAll('\\s','_')}" : "--rg-id ${prefix} --rg SM:$prefix"
 
+    // Calculate the midpoint of the reads array
+    def mid = reads.size() / 2
+    def reads1 = reads[0..<mid].join(',')
+    def reads2 = reads[mid..<reads.size()].join(',')
+
     """
     INDEX=\$(find -L ${index} -name "*.1.ht2" | sed 's/\\.1.ht2\$//')
     hisat2 \\
         -t -q \\
         -x \$INDEX \\
         -p $task.cpus \\
-        ${meta.single_end ? "-U $reads" : "-1 ${reads[0]} -2 ${reads[1]}"} \\
+        ${meta.single_end ? "-U $reads" : "-1 $reads1 -2 $reads2"} \\
         $strandedness \\
         --min-intronlen 20 \\
         --max-intronlen 500000 \\
@@ -59,5 +64,3 @@ process HISAT2_ALIGN {
     echo "hisat2: $VERSION\nsamtools: \$(samtools --version | sed 's/^.*samtools //; s/Using.*\$//')" > versions.yml
     """
 }
-
-// currently missing one step of merging multiple bams into one bam if same sample
