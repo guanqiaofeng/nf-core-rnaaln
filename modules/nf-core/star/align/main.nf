@@ -40,21 +40,46 @@ process STAR_ALIGN {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def reads1 = [], reads2 = []
-    meta.single_end ? [reads].flatten().each{reads1 << it} : reads.eachWithIndex{ v, ix -> ( ix & 1 ? reads2 : reads1) << v }
+    def reads1 = [], reads2 = [] // first half in reads1, second half in reads2
+    meta.single_end ? [reads].flatten().each{reads1 << it} : reads.eachWithIndex{ v, ix -> (ix < reads.size() / 2 ? reads1 : reads2) << v }
     def ignore_gtf      = star_ignore_sjdbgtf ? '' : "--sjdbGTFfile $gtf"
     def seq_platform    = seq_platform ? "'PL:$seq_platform'" : ""
     def seq_center      = seq_center ? "'CN:$seq_center'" : ""
     def attrRG          = args.contains("--outSAMattrRGline") ? "" : "--outSAMattrRGline 'ID:$prefix' $seq_center 'SM:$prefix' $seq_platform"
-    def out_sam_type    = (args.contains('--outSAMtype')) ? '' : '--outSAMtype BAM Unsorted'
     def mv_unsorted_bam = (args.contains('--outSAMtype BAM Unsorted SortedByCoordinate')) ? "mv ${prefix}.Aligned.out.bam ${prefix}.Aligned.unsort.out.bam" : ''
+    def uncompressionCommand = ''
+    if (reads.toList()[0].toString().endsWith('.gz')) {
+        uncompressionCommand = '--readFilesCommand zcat'
+    } else if (reads.toList()[0].toString().endsWith('.bz2')) {
+        uncompressionCommand = '--readFilesCommand bzcat'
+    }
+
     """
     STAR \\
         --genomeDir $index \\
         --readFilesIn ${reads1.join(",")} ${reads2.join(",")} \\
         --runThreadN $task.cpus \\
         --outFileNamePrefix $prefix. \\
-        $out_sam_type \\
+        $uncompressionCommand \\
+        --twopassMode Basic \\
+        --outFilterMultimapScoreRange 1 \\
+        --outFilterMultimapNmax 20 \\
+        --outFilterMismatchNmax 10 \\
+        --alignIntronMax 500000 \\
+        --alignMatesGapMax 1000000 \\
+        --sjdbScore 2 \\
+        --alignSJDBoverhangMin 1 \\
+        --genomeLoad NoSharedMemory \\
+        --outFilterMatchNminOverLread 0.33 \\
+        --outFilterScoreMinOverLread 0.33 \\
+        --outSAMstrandField intronMotif \\
+        --outSAMmode Full \\
+        --outSAMattributes NH HI NM MD AS XS \\
+        --outSAMunmapped Within \\
+        --limitSjdbInsertNsj 2000000 \\
+        --outSAMtype BAM Unsorted SortedByCoordinate \\
+        --outSAMheaderHD @HD VN:1.4 \\
+        --quantMode TranscriptomeSAM \\
         $ignore_gtf \\
         $attrRG \\
         $args

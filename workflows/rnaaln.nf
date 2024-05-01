@@ -27,7 +27,7 @@ workflow RNAALN {
         )
 
     ch_versions = ch_versions.mix(STAGE_INPUT.out.versions)
-    STAGE_INPUT.out.meta_files.subscribe { println("Meta Files Output: ${it}") }
+    // STAGE_INPUT.out.meta_files.subscribe { println("Meta Files Output: ${it}") }
 
     // Reformat fastq file channel for input to HISAT2_ALIGN
     // Original: [[meta1, [fastq1-1, fastq1-2]], [meta2, [fastq2-1, fastq2-2]]]
@@ -73,30 +73,32 @@ workflow RNAALN {
         tuple(meta, fastqPaths)}
     .set{ch_fastq}
 
-    // ch_fastq.subscribe { println("Reformatted Output: ${it}") }
+    // ch_fastq.subscribe { println("Meta Files Output: ${it}") }
+
+    ch_fastq.subscribe { println("Reformatted Output: ${it}") }
 
     // HISAT2_ALIGN
-    if (params.tools.split(',').contains('hisat2_aln')){
+    // if (params.tools.split(',').contains('hisat2_aln')){
 
-        index = Channel.fromPath(params.hisat2_index).collect()
-                .map { path -> [ [id: 'index'], path ] }
+    //     index = Channel.fromPath(params.hisat2_index).collect()
+    //             .map { path -> [ [id: 'index'], path ] }
 
-        splicesites = Channel.fromPath(params.reference_splicesites).collect()
-                    .map { path -> [ [id: 'splicesites'], path ] }
+    //     splicesites = Channel.fromPath(params.reference_splicesites).collect()
+    //                 .map { path -> [ [id: 'splicesites'], path ] }
 
-        ch_fasta = Channel.fromPath(params.reference_fasta).collect()
-                .map { path -> [ [id: 'fasta'], path ] }
+    //     ch_fasta = Channel.fromPath(params.reference_fasta).collect()
+    //             .map { path -> [ [id: 'fasta'], path ] }
 
-        HISAT2_ALIGN(
-            ch_fastq,
-            index,
-            splicesites
-        )
+    //     HISAT2_ALIGN(
+    //         ch_fastq,
+    //         index,
+    //         splicesites
+    //     )
 
-        ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions)
+    //     ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions)
 
-        HISAT2_ALIGN.out.bam.subscribe { println("Bam Output: ${it}") }
-    }
+    //     HISAT2_ALIGN.out.bam.subscribe { println("Bam Output: ${it}") }
+    // }
 
     // STAR_ALIGN
     if (params.tools.split(',').contains('star_aln')){
@@ -107,18 +109,21 @@ workflow RNAALN {
         gtf = Channel.fromPath(params.reference_gtf).collect()
                     .map { path -> [ [id: 'gtf'], path ] }
 
-        ch_fasta = Channel.fromPath(params.reference_fasta).collect()
-                .map { path -> [ [id: 'fasta'], path ] }
+        // ch_fasta = Channel.fromPath(params.reference_fasta).collect()
+        //         .map { path -> [ [id: 'fasta'], path ] }
 
-        HISAT2_ALIGN(
+        STAR_ALIGN(
             ch_fastq,
             index,
-            splicesites
+            gtf,
+            params.star_ignore_sjdbgtf,
+            "ILLUMINA",
+            "SIM"
         )
 
-        ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions)
+        ch_versions = ch_versions.mix(STAR_ALIGN.out.versions)
 
-        HISAT2_ALIGN.out.bam.subscribe { println("Bam Output: ${it}") }
+        STAR_ALIGN.out.bam.subscribe { println("STAR Bam Output: ${it}") }
     }
 
     //Markduplicate
