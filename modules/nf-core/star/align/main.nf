@@ -11,9 +11,6 @@ process STAR_ALIGN {
     tuple val(meta), path(reads, stageAs: "input*/*")
     tuple val(meta2), path(index)
     tuple val(meta3), path(gtf)
-    val star_ignore_sjdbgtf
-    val seq_platform
-    val seq_center
 
     output:
     tuple val(meta), path('*Log.final.out')   , emit: log_final
@@ -42,12 +39,17 @@ process STAR_ALIGN {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def reads1 = [], reads2 = [] // first half in reads1, second half in reads2
     meta.single_end ? [reads].flatten().each{reads1 << it} : reads.eachWithIndex{ v, ix -> (ix < reads.size() / 2 ? reads1 : reads2) << v }
-    def ignore_gtf      = star_ignore_sjdbgtf ? '' : "--sjdbGTFfile $gtf"
-    def seq_platform    = seq_platform ? "'PL:$seq_platform'" : ""
-    def seq_center      = seq_center ? "'CN:$seq_center'" : ""
-    def attrRG          = args.contains("--outSAMattrRGline") ? "" : "--outSAMattrRGline 'ID:$prefix' $seq_center 'SM:$prefix' $seq_platform"
-    def mv_unsorted_bam = (args.contains('--outSAMtype BAM Unsorted SortedByCoordinate')) ? "mv ${prefix}.Aligned.out.bam ${prefix}.Aligned.unsort.out.bam" : ''
-    def uncompressionCommand = ''
+    def attrRG          = '' // read group information
+    if (meta.read_group.contains(",")) {
+        readGroups = meta.read_group.split(",")
+        readGroups.each { readGroup ->
+            attrRG += "ID:${readGroup.trim()} SM:$meta.sample CN:$meta.sequencing_center PL:$meta.platform, "
+            }
+        attrRG = attrRG[0..-3] // Remove the trailing comma and space
+    } else {
+        attrRG = "ID:$meta.read_group SM:$prefix CN:$meta.sequencing_center PL:$meta.platform"
+    }
+    def uncompressionCommand = '' // file uncompression command
     if (reads.toList()[0].toString().endsWith('.gz')) {
         uncompressionCommand = '--readFilesCommand zcat'
     } else if (reads.toList()[0].toString().endsWith('.bz2')) {
@@ -55,12 +57,15 @@ process STAR_ALIGN {
     }
 
     """
+    echo ${attrRG}
+
     STAR \\
         --genomeDir $index \\
+        --sjdbGTFfile $gtf \\
         --readFilesIn ${reads1.join(",")} ${reads2.join(",")} \\
+        $uncompressionCommand \\
         --runThreadN $task.cpus \\
         --outFileNamePrefix $prefix. \\
-        $uncompressionCommand \\
         --twopassMode Basic \\
         --outFilterMultimapScoreRange 1 \\
         --outFilterMultimapNmax 20 \\
@@ -80,20 +85,10 @@ process STAR_ALIGN {
         --outSAMtype BAM Unsorted SortedByCoordinate \\
         --outSAMheaderHD @HD VN:1.4 \\
         --quantMode TranscriptomeSAM \\
-        $ignore_gtf \\
-        $attrRG \\
+        --outSAMattrRGline $attrRG \\
         $args
 
-    $mv_unsorted_bam
-
-    if [ -f ${prefix}.Unmapped.out.mate1 ]; then
-        mv ${prefix}.Unmapped.out.mate1 ${prefix}.unmapped_1.fastq
-        gzip ${prefix}.unmapped_1.fastq
-    fi
-    if [ -f ${prefix}.Unmapped.out.mate2 ]; then
-        mv ${prefix}.Unmapped.out.mate2 ${prefix}.unmapped_2.fastq
-        gzip ${prefix}.unmapped_2.fastq
-    fi
+    mv ${prefix}.Aligned.out.bam ${prefix}.Aligned.unsort.out.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

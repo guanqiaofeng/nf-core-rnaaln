@@ -78,53 +78,50 @@ workflow RNAALN {
     ch_fastq.subscribe { println("Reformatted Output: ${it}") }
 
     // HISAT2_ALIGN
-    // if (params.tools.split(',').contains('hisat2_aln')){
+    if (params.tools.split(',').contains('hisat2_aln')){
 
-    //     index = Channel.fromPath(params.hisat2_index).collect()
-    //             .map { path -> [ [id: 'index'], path ] }
-
-    //     splicesites = Channel.fromPath(params.reference_splicesites).collect()
-    //                 .map { path -> [ [id: 'splicesites'], path ] }
-
-    //     ch_fasta = Channel.fromPath(params.reference_fasta).collect()
-    //             .map { path -> [ [id: 'fasta'], path ] }
-
-    //     HISAT2_ALIGN(
-    //         ch_fastq,
-    //         index,
-    //         splicesites
-    //     )
-
-    //     ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions)
-
-    //     HISAT2_ALIGN.out.bam.subscribe { println("Bam Output: ${it}") }
-    // }
-
-    // STAR_ALIGN
-    if (params.tools.split(',').contains('star_aln')){
-
-        index = Channel.fromPath(params.star_index).collect()
+        index = Channel.fromPath(params.hisat2_index).collect()
                 .map { path -> [ [id: 'index'], path ] }
 
-        gtf = Channel.fromPath(params.reference_gtf).collect()
-                    .map { path -> [ [id: 'gtf'], path ] }
+        splicesites = Channel.fromPath(params.reference_splicesites).collect()
+                    .map { path -> [ [id: 'splicesites'], path ] }
 
-        // ch_fasta = Channel.fromPath(params.reference_fasta).collect()
-        //         .map { path -> [ [id: 'fasta'], path ] }
+        ch_fasta = Channel.fromPath(params.reference_fasta).collect()
+                .map { path -> [ [id: 'fasta'], path ] }
 
-        STAR_ALIGN(
+        HISAT2_ALIGN(
             ch_fastq,
             index,
-            gtf,
-            params.star_ignore_sjdbgtf,
-            "ILLUMINA",
-            "SIM"
+            splicesites
         )
 
-        ch_versions = ch_versions.mix(STAR_ALIGN.out.versions)
+        ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions)
 
-        STAR_ALIGN.out.bam.subscribe { println("STAR Bam Output: ${it}") }
+        HISAT2_ALIGN.out.bam.subscribe { println("Bam Output: ${it}") }
     }
+
+    // STAR_ALIGN
+    // if (params.tools.split(',').contains('star_aln')){
+
+    //     index = Channel.fromPath(params.star_index).collect()
+    //             .map { path -> [ [id: 'index'], path ] }
+
+    //     gtf = Channel.fromPath(params.reference_gtf).collect()
+    //                 .map { path -> [ [id: 'gtf'], path ] }
+
+    //     // ch_fasta = Channel.fromPath(params.reference_fasta).collect()
+    //     //         .map { path -> [ [id: 'fasta'], path ] }
+
+    //     STAR_ALIGN(
+    //         ch_fastq,
+    //         index,
+    //         gtf
+    //     )
+
+    //     ch_versions = ch_versions.mix(STAR_ALIGN.out.versions)
+
+    //     STAR_ALIGN.out.bam.subscribe { println("STAR Bam Output: ${it}") }
+    // }
 
     //Markduplicate
 
