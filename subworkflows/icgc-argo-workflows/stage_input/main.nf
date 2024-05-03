@@ -20,7 +20,7 @@ workflow STAGE_INPUT {
     if (params.local_mode){
         upRdpc_flag=false
     } else {
-        //Otherwise only upload to RDPC is API_Token is present
+        //Otherwise only upload to RDPC if API_Token is present
         if (params.api_token || params.api_upload_token){
             upRdpc_flag=true
         } else {

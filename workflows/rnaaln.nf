@@ -41,13 +41,13 @@ workflow RNAALN {
         return [
             meta: [
                 analysis_type: meta.analysis_type,
-                id: "${meta.study_id}.${meta.patient}.${meta.sample}",
+                id: "${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
                 study_id: meta.study_id,
                 patient: meta.patient,
                 sex: meta.sex,
                 status: meta.status,
                 sample: meta.sample,
-                read_group: laneId,
+                read_group: meta.read_group,
                 data_type: meta.data_type,
                 numLanes: meta.numLanes,
                 experiment: meta.experiment,
@@ -55,7 +55,8 @@ workflow RNAALN {
                 sequencing_center: meta.sequencing_center,
                 library_strandedness: meta.library_strandedness,
                 platform: meta.platform,
-                sequencing_date: meta.sequencing_date
+                sequencing_date: meta.sequencing_date,
+                upRdpc : upRdpc
             ],
             fastq: fastq
         ]
