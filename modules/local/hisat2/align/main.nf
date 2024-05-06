@@ -26,10 +26,11 @@ process HISAT2_ALIGN {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}" // meta.id: SA001-SO1L1 sample-readGroup
+    def prefix = task.ext.prefix ?: "${meta.study_id}.${meta.patient}.${meta.sample}.${meta.id}" // meta.id: SA001-SO1L1 sample-readGroup
     def VERSION = '2.2.1' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     def strandedness = meta.strandedness == 'forward' ? meta.single_end ? '--rna-strandness F' : '--rna-strandness FR' : meta.strandedness == 'reverse' ? meta.single_end ? '--rna-strandness R' : '--rna-strandness RF' : ''
-    def seq_center = meta?.sequencing_center ? "--rg-id ${prefix} --rg SM:$prefix --rg CN:${meta.sequencing_center.replaceAll('\\s','_')}" : "--rg-id ${prefix} --rg SM:$prefix"
+    // def seq_center = meta?.sequencing_center ? "--rg-id ${prefix} --rg SM:$prefix --rg CN:${meta.sequencing_center.replaceAll('\\s','_')}" : "--rg-id ${prefix} --rg SM:$prefix"
+
 
     // Calculate the midpoint of the reads array
     def mid = reads.size() / 2
@@ -53,10 +54,11 @@ process HISAT2_ALIGN {
         --novel-splicesite-outfile ${prefix}.novel_splicesites.txt \\
         -k 20 --secondary \\
         -I 50 -X 800 \\
-        $seq_center \\
+        --rg-id $meta.id \\
         $args \\
         | samtools view -bS --no-PG - \\
-        | samtools sort -o ${prefix}.hisat2_Aligned.bam -
+        | samtools sort - \\
+        | samtools reheader -P -c \'sed -e "s/^@RG.*/${meta.read_group.replaceAll(/'/,'')}/g"\' - > ${prefix}.hisat2_Aligned.bam
 
     sort -k1,1 -k2,3n -k4,4 -u ${prefix}.novel_splicesites.txt > ${prefix}.hisat2.novel_splicesites.txt
     rm ${prefix}.novel_splicesites.txt

@@ -66,7 +66,7 @@ workflow STAGE_INPUT {
         if (row.analysis_type == "sequencing_experiment" && row.experiment == "RNA-Seq" && row.single_end.toLowerCase() == 'false') {
             tuple([
                 analysis_type : row.analysis_type,
-                id:row.lane,
+                id:"${row.sample}-${row.lane}".toString(),
                 study_id:row.study_id,
                 patient:row.patient,
                 sex:row.sex,
@@ -88,7 +88,7 @@ workflow STAGE_INPUT {
         } else if (row.analysis_type == "sequencing_experiment" && row.experiment == "RNA-Seq" && row.single_end.toLowerCase() == 'true') {
             tuple([
                 analysis_type : row.analysis_type,
-                id:row.lane,
+                id:"${row.sample}-${row.lane}".toString(),
                 study_id:row.study_id,
                 patient:row.patient,
                 sex:row.sex,

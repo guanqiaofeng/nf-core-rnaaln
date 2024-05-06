@@ -36,7 +36,7 @@ process STAR_ALIGN {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.study_id}.${meta.patient}.${meta.sample}.${meta.id}"
     def reads1 = [], reads2 = [] // first half in reads1, second half in reads2
     meta.single_end ? [reads].flatten().each{reads1 << it} : reads.eachWithIndex{ v, ix -> (ix < reads.size() / 2 ? reads1 : reads2) << v }
     def attrRG          = '' // read group information
@@ -55,6 +55,8 @@ process STAR_ALIGN {
     } else if (reads.toList()[0].toString().endsWith('.bz2')) {
         uncompressionCommand = '--readFilesCommand bzcat'
     }
+
+    def readgroupinfo = meta.id.split(',').collect { "ID:$it" }.join(' , ')
 
     """
     echo ${attrRG}
@@ -85,10 +87,12 @@ process STAR_ALIGN {
         --outSAMtype BAM Unsorted SortedByCoordinate \\
         --outSAMheaderHD @HD VN:1.4 \\
         --quantMode TranscriptomeSAM \\
-        --outSAMattrRGline $attrRG \\
+        --outSAMattrRGline $readgroupinfo \\
         $args
 
     mv ${prefix}.Aligned.out.bam ${prefix}.Aligned.unsort.out.bam
+
+    samtools reheader -P -c \'sed -e "s/^@RG.*/${meta.read_group.replaceAll(/'/,'')}/g"\' ${prefix}.Aligned.sortedByCoord.out.bam > ${prefix}.star_Aligned.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -127,3 +131,5 @@ process STAR_ALIGN {
     END_VERSIONS
     """
 }
+
+//  // samtools reheader -P -c \'sed -e "s/^@RG.*/${meta.read_group.replaceAll(/'/,'')}/g"\' ${prefix}.Aligned.sortedByCoord.out.bam | awk '!seen[$0]++' > ${prefix}.star_Aligned.bam
