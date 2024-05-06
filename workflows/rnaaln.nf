@@ -8,7 +8,7 @@ include { STAGE_INPUT } from '../subworkflows/icgc-argo-workflows/stage_input/ma
 include { SONG_SCORE_DOWNLOAD } from '../subworkflows/icgc-argo-workflows/song_score_download/main'
 include { SONG_SCORE_UPLOAD } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { HISAT2_ALIGN } from '../modules/local/hisat2/align/main'
-include { STAR_ALIGN } from '../modules/nf-core/star/align/main'
+include { STAR_ALIGN } from '../modules/local/star/align/main'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
