@@ -81,7 +81,7 @@ process STAR_ALIGN {
 
     mv ${prefix}.Aligned.out.bam ${prefix}.Aligned.unsort.out.bam
 
-    samtools reheader -P -c \'sed -e "s/^@RG.*/${meta.read_group.replaceAll(/'/,'')}/g"\' ${prefix}.Aligned.sortedByCoord.out.bam > ${prefix}.star_Aligned.bam
+    samtools reheader -P -c \'sed -e "s/^@RG.*/${meta.read_group.replaceAll(/'/,'')}/"\' ${prefix}.Aligned.sortedByCoord.out.bam > ${prefix}.star_Aligned.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

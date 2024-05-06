@@ -9,7 +9,7 @@ process HISAT2_ALIGN {
         'biocontainers/mulled-v2-a97e90b3b802d1da3d6958e0867610c718cb5eb1:2cdf6bf1e92acbeb9b2834b1c58754167173a410-0' }"
 
     input:
-    tuple val(meta), path(reads) //reads may contain multiple pairs of fastq: [fastq1_1, fastq2_1, fastq1_2, fastq2_2]
+    tuple val(meta), path(reads) //reads may contain multiple pairs of fastq: [fastq1_1, fastq2_1, fastq1_2, fastq2_2], it can handle multiple pairs of fastq, but the read group information can not be added properly. When run with single pair of fastq, the read group info is added properly
     tuple val(meta2), path(index)
     tuple val(meta3), path(splicesites)
 
@@ -26,16 +26,15 @@ process HISAT2_ALIGN {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.study_id}.${meta.patient}.${meta.sample}.${meta.id}" // meta.id: SA001-SO1L1 sample-readGroup
+    def prefix = task.ext.prefix ?: "${meta.study_id}.${meta.patient}.${meta.sample}.${meta.id}"
     def VERSION = '2.2.1' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     def strandedness = meta.strandedness == 'forward' ? meta.single_end ? '--rna-strandness F' : '--rna-strandness FR' : meta.strandedness == 'reverse' ? meta.single_end ? '--rna-strandness R' : '--rna-strandness RF' : ''
-    // def seq_center = meta?.sequencing_center ? "--rg-id ${prefix} --rg SM:$prefix --rg CN:${meta.sequencing_center.replaceAll('\\s','_')}" : "--rg-id ${prefix} --rg SM:$prefix"
-
-
     // Calculate the midpoint of the reads array
-    def mid = reads.size() / 2
-    def reads1 = reads[0..<mid].join(',')
-    def reads2 = reads[mid..<reads.size()].join(',')
+    // def mid = reads.size() / 2
+    // def reads1 = reads[0..<mid].join(',')
+    // def reads2 = reads[mid..<reads.size()].join(',')
+    def reads1 = [], reads2 = [] // first half in reads1, second half in reads2
+    meta.single_end ? [reads].flatten().each{reads1 << it} : reads.eachWithIndex{ v, ix -> (ix < reads.size() / 2 ? reads1 : reads2) << v }
 
     """
     INDEX=\$(find -L ${index} -name "*.1.ht2" | sed 's/\\.1.ht2\$//')
@@ -43,7 +42,7 @@ process HISAT2_ALIGN {
         -t -q \\
         -x \$INDEX \\
         -p $task.cpus \\
-        ${meta.single_end ? "-U $reads" : "-1 $reads1 -2 $reads2"} \\
+        ${meta.single_end ? "-1 ${reads.join(",")}" : "-1 ${reads1.join(",")} -2 ${reads2.join(",")}"} \\
         $strandedness \\
         --min-intronlen 20 \\
         --max-intronlen 500000 \\
@@ -58,7 +57,7 @@ process HISAT2_ALIGN {
         $args \\
         | samtools view -bS --no-PG - \\
         | samtools sort - \\
-        | samtools reheader -P -c \'sed -e "s/^@RG.*/${meta.read_group.replaceAll(/'/,'')}/g"\' - > ${prefix}.hisat2_Aligned.bam
+        | samtools reheader -P -c \'sed -e "s/^@RG.*/${meta.read_group.replaceAll(/'/,'')}/"\' - > ${prefix}.hisat2_Aligned.bam
 
     sort -k1,1 -k2,3n -k4,4 -u ${prefix}.novel_splicesites.txt > ${prefix}.hisat2.novel_splicesites.txt
     rm ${prefix}.novel_splicesites.txt
