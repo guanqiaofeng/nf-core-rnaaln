@@ -14,7 +14,7 @@ process HISAT2_ALIGN {
     tuple val(meta3), path(splicesites)
 
     output:
-    tuple val(meta), path("*.bam")                   , emit: bam
+    tuple val(meta), path("*.hisat2_Aligned.bam")    , emit: bam
     tuple val(meta), path("*_summary.txt")           , emit: summary
     tuple val(meta), path("*fastq.gz"), optional:true, emit: fastq
     tuple val(meta), path("*_metrics.txt")           , emit: metrix
