@@ -1,0 +1,2 @@
+tar:
+  - "modules/icgc-argo-workflows/tar/**"

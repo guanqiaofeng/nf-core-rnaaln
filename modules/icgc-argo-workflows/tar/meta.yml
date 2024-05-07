@@ -1,0 +1,40 @@
+name: tar
+description: Archive files.
+keywords:
+  - tar
+  - compress
+  - archive
+tools:
+  - tar:
+      description: |
+        archive and generate .tgz files
+      licence: ["GPL-3.0-or-later"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'test', single_end:false ]
+  - input:
+      type: path
+      description: Path to the input files to be archived
+output:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'test', single_end:false ]
+  - archive:
+      type: path
+      description: Path to the output archived files
+      pattern: "*.tgz"
+  - versions:
+      type: file
+      description: File containing software versions
+      pattern: "versions.yml"
+authors:
+  - "@guanqiaofeng"
+  - "@edsu7"
+maintainers:
+  - "@guanqiaofeng"
+  - "@edsu7"

@@ -1,0 +1,62 @@
+name: merg_sort_dup
+description: Merge bam files, sort it, and mark duplicates
+keywords:
+  - sort
+  - merge
+  - mark duplicates
+components:
+  - samtools/merge
+  - samtools/sort
+  - samtools/index
+  - biobambam/bammarkduplicates2
+  - tar
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'test', single_end:false ]
+  - bam:
+      type: file
+      description: BAM/CRAM/SAM file
+      pattern: "*.{bam,cram,sam}"
+  - reference_files:
+      type: file
+      description: genome reference files
+output:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'test', single_end:false ]
+  - bam:
+      type: file
+      description: filtered/converted BAM file
+      pattern: "*{.bam}"
+  - cram:
+      type: file
+      description: filtered/converted CRAM file
+      pattern: "*{cram}"
+  - bai:
+      type: file
+      description: filtered/converted BAM index
+      pattern: "*{.bai}"
+  - crai:
+      type: file
+      description: filtered/converted CRAM index
+      pattern: "*{.crai}"
+  - tar:
+      type: archived file
+      description: |
+        Archived metrics file
+      pattern: "*.tgz"
+  - versions:
+      type: file
+      description: File containing software versions
+      pattern: "versions.yml"
+authors:
+  - "@guanqiaofeng"
+  - "@edsu7"
+maintainers:
+  - "@guanqiaofeng"
+  - "@edsu7"

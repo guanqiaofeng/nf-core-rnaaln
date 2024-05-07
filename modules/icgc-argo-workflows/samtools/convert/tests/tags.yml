@@ -1,0 +1,2 @@
+samtools/convert:
+  - "modules/icgc-argo-workflows/samtools/convert/**"

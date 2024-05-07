@@ -1,0 +1,9 @@
+name: tar
+
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - conda-forge::tar=1.34

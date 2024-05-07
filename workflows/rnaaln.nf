@@ -9,6 +9,8 @@ include { SONG_SCORE_DOWNLOAD } from '../subworkflows/icgc-argo-workflows/song_s
 include { SONG_SCORE_UPLOAD } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { HISAT2_ALIGN } from '../modules/local/hisat2/align/main'
 include { STAR_ALIGN } from '../modules/local/star/align/main'
+include { MERG_SORT_DUP } from '../subworkflows/icgc-argo-workflows/merg_sort_dup/main'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW

@@ -1,0 +1,2 @@
+biobambam/bammarkduplicates2:
+  - "modules/icgc-argo-workflows/biobambam/bammarkduplicates2/**"

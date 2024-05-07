@@ -5,6 +5,11 @@
         "https://github.com/icgc-argo-workflows/argo-modules.git": {
             "modules": {
                 "icgc-argo-workflows": {
+                    "biobambam/bammarkduplicates2": {
+                        "branch": "main",
+                        "git_sha": "8909b3114d2360514c3b3514f5c5f66f7b506f8e",
+                        "installed_by": ["merg_sort_dup"]
+                    },
                     "checkinput": {
                         "branch": "main",
                         "git_sha": "e1f2b946b457eac191c0fa97ae1d159a15874c6b",
@@ -15,10 +20,20 @@
                         "git_sha": "dbd4c7b18c86be15f2ca341085d90c0488545d53",
                         "installed_by": ["stage_input"]
                     },
+                    "samtools/convert": {
+                        "branch": "main",
+                        "git_sha": "8909b3114d2360514c3b3514f5c5f66f7b506f8e",
+                        "installed_by": ["merg_sort_dup"]
+                    },
                     "samtools/index": {
                         "branch": "main",
                         "git_sha": "e1f2b946b457eac191c0fa97ae1d159a15874c6b",
-                        "installed_by": ["stage_input"]
+                        "installed_by": ["merg_sort_dup", "stage_input"]
+                    },
+                    "samtools/merge": {
+                        "branch": "main",
+                        "git_sha": "8909b3114d2360514c3b3514f5c5f66f7b506f8e",
+                        "installed_by": ["merg_sort_dup"]
                     },
                     "score/download": {
                         "branch": "main",
@@ -54,11 +69,21 @@
                         "branch": "main",
                         "git_sha": "e1f2b946b457eac191c0fa97ae1d159a15874c6b",
                         "installed_by": ["stage_input"]
+                    },
+                    "tar": {
+                        "branch": "main",
+                        "git_sha": "8909b3114d2360514c3b3514f5c5f66f7b506f8e",
+                        "installed_by": ["merg_sort_dup"]
                     }
                 }
             },
             "subworkflows": {
                 "icgc-argo-workflows": {
+                    "merg_sort_dup": {
+                        "branch": "main",
+                        "git_sha": "8909b3114d2360514c3b3514f5c5f66f7b506f8e",
+                        "installed_by": ["subworkflows"]
+                    },
                     "song_score_download": {
                         "branch": "main",
                         "git_sha": "92aa620385099e94401c22b8633cc55ed34ca10e",
@@ -87,8 +112,8 @@
                     },
                     "hisat2/align": {
                         "branch": "master",
-                        "git_sha": "400037f54de4b0c42712ec5a499d9fd9e66250d1",
-                        "installed_by": ["fastq_align_hisat2", "modules"]
+                        "git_sha": "4eed099a12a7d586ce830a662a33a9df5bd67a24",
+                        "installed_by": ["modules"]
                     },
                     "multiqc": {
                         "branch": "master",
@@ -98,12 +123,12 @@
                     "samtools/flagstat": {
                         "branch": "master",
                         "git_sha": "f4596fe0bdc096cf53ec4497e83defdb3a94ff62",
-                        "installed_by": ["bam_stats_samtools"]
+                        "installed_by": ["modules"]
                     },
                     "samtools/idxstats": {
                         "branch": "master",
                         "git_sha": "f4596fe0bdc096cf53ec4497e83defdb3a94ff62",
-                        "installed_by": ["bam_stats_samtools"]
+                        "installed_by": ["modules"]
                     },
                     "samtools/index": {
                         "branch": "master",
@@ -118,41 +143,12 @@
                     "samtools/stats": {
                         "branch": "master",
                         "git_sha": "f4596fe0bdc096cf53ec4497e83defdb3a94ff62",
-                        "installed_by": ["bam_stats_samtools"]
-                    }
-                }
-            },
-            "subworkflows": {
-                "nf-core": {
-                    "bam_sort_stats_samtools": {
-                        "branch": "master",
-                        "git_sha": "4352dbdb09ec40db71e9b172b97a01dcf5622c26",
-                        "installed_by": ["fastq_align_hisat2"]
+                        "installed_by": ["modules"]
                     },
-                    "bam_stats_samtools": {
+                    "star/align": {
                         "branch": "master",
-                        "git_sha": "f4596fe0bdc096cf53ec4497e83defdb3a94ff62",
-                        "installed_by": ["bam_sort_stats_samtools"]
-                    },
-                    "fastq_align_hisat2": {
-                        "branch": "master",
-                        "git_sha": "701ae347c4508fba1b7d65262596f278b6a11cb6",
-                        "installed_by": ["subworkflows"]
-                    },
-                    "utils_nextflow_pipeline": {
-                        "branch": "master",
-                        "git_sha": "5caf7640a9ef1d18d765d55339be751bb0969dfa",
-                        "installed_by": ["subworkflows"]
-                    },
-                    "utils_nfcore_pipeline": {
-                        "branch": "master",
-                        "git_sha": "5caf7640a9ef1d18d765d55339be751bb0969dfa",
-                        "installed_by": ["subworkflows"]
-                    },
-                    "utils_nfvalidation_plugin": {
-                        "branch": "master",
-                        "git_sha": "5caf7640a9ef1d18d765d55339be751bb0969dfa",
-                        "installed_by": ["subworkflows"]
+                        "git_sha": "cd22a76c78b09f7837a5a75642774a4bf48c92ba",
+                        "installed_by": ["modules"]
                     }
                 }
             }
