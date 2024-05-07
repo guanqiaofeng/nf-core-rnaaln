@@ -129,11 +129,11 @@ def generate_fastqs_from_bam(bam, readgroups, cpu=None, sample_sheet=dict(), stu
               cmd = f"samtools collate -uO --threads {cpu} {lane_bam} | \
               samtools fastq -N -O -F 0x900 --threads {cpu} -0 {out_dir}/{rg_id_fn}_other.fq.gz \
               -1 {out_dir}/{rg_id_fn}_R1.fq.gz -s {out_dir}/{rg_id_fn}_singleton.fq.gz - "
-
+            
             stdout, stderr, returncode = run_cmd(cmd)
             if returncode:
               sys.exit(f"Error: 'samtools collate and fastq' failed.\nStdout: {stdout}\nStderr: {stderr}\n")
-
+            
             sample_sheet[rg['submitter_read_group_id']] = {
               'file_r1': os.path.join(os.getcwd(), f'{out_dir}/{rg_id_fn}_R1.fq.gz'),
               'file_r2': os.path.join(os.getcwd(), f'{out_dir}/{rg_id_fn}_R2.fq.gz') if os.path.isfile(f'{out_dir}/{rg_id_fn}_R2.fq.gz') else 'No_File'
@@ -141,12 +141,12 @@ def generate_fastqs_from_bam(bam, readgroups, cpu=None, sample_sheet=dict(), stu
 
             # retrieve read_group_info from metadata
             read_group_info = get_read_group_info(rg, study_id, donor_id, sample_id, specimen_id, specimen_type, tumour_normal_designation)
-
+            
             if read_group_info:
               rg_kv = [ '@RG' ] + [ '%s:%s' % (k, v) for k, v in read_group_info.items() ]
               rg_array = "\'"+'\\t'.join(rg_kv)+"\'"
 
-            sample_sheet[rg['submitter_read_group_id']].update({'read_group': rg_array})
+            sample_sheet[rg['submitter_read_group_id']].update({'read_group': rg_array}) 
 
         else:  # ignore lane bam without read group information in metadata, just produce a warning message here
             print("WARNING: Ignore lane BAM '%s' (split from input BAM '%s') that has no corresponding read group in the metadata" %
@@ -155,9 +155,9 @@ def generate_fastqs_from_bam(bam, readgroups, cpu=None, sample_sheet=dict(), stu
       cmd = f"rm %s" % (lane_bam)
       stdout, stderr, returncode = run_cmd(cmd)
       if returncode:
-        sys.exit(f"Error: 'Deleting file {lane_bam}' failed.\nStdout: {stdout}\nStderr: {stderr}\n")
+        sys.exit(f"Error: 'Deleting file {lane_bam}' failed.\nStdout: {stdout}\nStderr: {stderr}\n")      
 
-    return sample_sheet
+    return sample_sheet    
 
 def bunzip2(fq_pair):
     bunzipped = []
@@ -186,9 +186,9 @@ def get_new_filename(fastq_old, rg_id_fn, r1_r2, outdir):
       fastq_new = os.path.join(os.getcwd(), outdir, f'{rg_id_fn}_{r1_r2}.fq.gz')
     else:
       sys.exit("Unsupported file format: %s." % fastq_old)
-
+    
     return fastq_new
-
+    
 def get_read_group_info(read_group, study_id, donor_id, sample_id, specimen_id, specimen_type, tumour_normal_designation):
 
     read_group_info = {
@@ -254,22 +254,19 @@ def main():
     sample_id = song_analysis['samples'][0]['sampleId']
     specimen_id = song_analysis['samples'][0]['specimen']['specimenId']
     if song_analysis['samples'][0]['donor']['gender'] == 'Female':
-       sex = 'XX'
-    elif song_analysis['samples'][0]['donor']['gender'] == 'Male':
+       sex = 'XX'  
+    elif song_analysis['samples'][0]['donor']['gender'] == 'Male': 
        sex = 'XY'
     else:
        sex = 'NA'
     specimen_type = song_analysis['samples'][0]['specimen']['specimenType']
     tumour_normal_designation = song_analysis['samples'][0]['specimen']['tumourNormalDesignation']
     status = '0' if tumour_normal_designation == 'Normal' else '1'
-
+    
     if song_analysis.get('workflow'):
       genome_build = song_analysis['workflow']["genome_build"]
     else:
       genome_build = None
-
-    library_strandedness = song_analysis['experiment'].get('library_strandedness')
-    sequencing_date = song_analysis['experiment'].get('sequencing_date')
 
     analysis_type = song_analysis['analysisType']['name']
     output_sample_sheet = f'{args.outdir}/{sample_id}_{analysis_type}_sample_sheet.csv'
@@ -286,8 +283,8 @@ def main():
           # for bam just need fp[0] since fp[1] is either the same as fp[0] or None
           sample_sheet = generate_fastqs_from_bam(filename_to_file(fp, args.input_files)[0],
                                       filepair_map_to_readgroup[fp]['read_groups'],
-                                      args.cpus, sample_sheet, study_id, donor_id, sample_id,
-                                      args.outdir, specimen_id, specimen_type,
+                                      args.cpus, sample_sheet, study_id, donor_id, sample_id, 
+                                      args.outdir, specimen_id, specimen_type, 
                                       tumour_normal_designation)
         else: # FASTQ must be one read group
           fq_pair = filename_to_file(fp, args.input_files)
@@ -307,7 +304,7 @@ def main():
             'file_r1': file_r1_new,
             'file_r2': file_r2_new
           }
-
+        
           # retrieve read_group_info from metadata
           read_group_info = get_read_group_info(rg, study_id, donor_id, sample_id, specimen_id, specimen_type, tumour_normal_designation)
 
@@ -315,9 +312,9 @@ def main():
             rg_kv = [ '@RG' ] + [ '%s:%s' % (k, v) for k, v in read_group_info.items() ]
             rg_array = "\'"+'\\t'.join(rg_kv)+"\'"
 
-          sample_sheet[rg_id].update({'read_group': rg_array})
-
-
+          sample_sheet[rg_id].update({'read_group': rg_array}) 
+        
+          
       # now we check whether all read groups in metadata have produced lane fastq
       rgs_missed_lane = set()
       for rg in song_analysis['read_groups']:
@@ -330,14 +327,14 @@ def main():
 
       with open(output_sample_sheet, 'w', newline='') as f:
         csvwriter = csv.writer(f, delimiter=',')
-        csvwriter.writerow(['analysis_type','study_id','patient','sex','status','sample','lane','fastq_1','fastq_2','read_group','single_end','read_group_count',"experiment", 'library_strandedness', 'sequencing_date', 'analysis_json'])
+        csvwriter.writerow(['analysis_type','study_id','patient','sex','status','sample','lane','fastq_1','fastq_2','read_group','single_end','read_group_count',"experiment", 'analysis_json'])
         for k,v in sample_sheet.items():
           single_end = True if v['file_r2'] == 'No_File' else False
-          csvwriter.writerow([analysis_type, study_id, donor_id, sex, status, sample_id, k, v['file_r1'], v['file_r2'], v['read_group'], single_end, read_group_count,experiment, library_strandedness, sequencing_date, metadata_json])
-
+          csvwriter.writerow([analysis_type, study_id, donor_id, sex, status, sample_id, k, v['file_r1'], v['file_r2'], v['read_group'], single_end, read_group_count,experiment, metadata_json])
+    
     elif analysis_type == 'sequencing_alignment':
       for fp in args.input_files:
-        if fp.endswith('cram') or fp.endswith('bam'):
+        if fp.endswith('cram') or fp.endswith('bam'): 
           bam_cram = os.path.join(os.getcwd(), args.outdir, os.path.basename(fp))
           os.symlink(os.path.abspath(fp), bam_cram)
         elif fp.endswith('crai') or fp.endswith('bai'):
@@ -347,15 +344,15 @@ def main():
           sys.exit("Error: not supported input file format")
       with open(output_sample_sheet, 'w', newline='') as f:
         csvwriter = csv.writer(f, delimiter=',')
-        csvwriter.writerow(['analysis_type','study_id','patient','sex','status','sample','bam_cram','bai_crai',"genome_build",'experiment', 'library_strandedness', 'sequencing_date' ,'analysis_json'])
-        csvwriter.writerow([analysis_type, study_id, donor_id, sex, status, sample_id, bam_cram, bai_crai, genome_build,experiment, library_strandedness, sequencing_date, metadata_json])
+        csvwriter.writerow(['analysis_type','study_id','patient','sex','status','sample','bam_cram','bai_crai',"genome_build",'experiment', 'analysis_json'])
+        csvwriter.writerow([analysis_type, study_id, donor_id, sex, status, sample_id, bam_cram, bai_crai, genome_build,experiment, metadata_json])
 
     elif analysis_type == 'variant_calling':
       for fp in song_analysis['files']:
          if not fp['fileType'] == 'VCF': continue
          variantcaller = fp['info']['analysis_tools'][0]
       for fp in args.input_files:
-        if fp.endswith('vcf.gz'):
+        if fp.endswith('vcf.gz'): 
           vcf = os.path.join(os.getcwd(), args.outdir, os.path.basename(fp))
           os.symlink(os.path.abspath(fp), vcf)
         elif fp.endswith('vcf.gz.tbi'):
@@ -365,13 +362,13 @@ def main():
           sys.exit("Error: not supported input file format")
       with open(output_sample_sheet, 'w', newline='') as f:
         csvwriter = csv.writer(f, delimiter=',')
-        csvwriter.writerow(['analysis_type','study_id','patient','sex','sample','variantcaller','vcf','tbi',"genome_build",'experiment', 'library_strandedness', 'sequencing_date', 'analysis_json'])
-        csvwriter.writerow([analysis_type, study_id, donor_id, sex, sample_id, variantcaller, vcf, tbi ,genome_build,experiment, library_strandedness, sequencing_date, metadata_json])
+        csvwriter.writerow(['analysis_type','study_id','patient','sex','sample','variantcaller','vcf','tbi',"genome_build",'experiment', 'analysis_json'])
+        csvwriter.writerow([analysis_type, study_id, donor_id, sex, sample_id, variantcaller, vcf, tbi ,genome_build,experiment, metadata_json])  
 
     elif analysis_type == 'qc_metrics':
       with open(output_sample_sheet, 'w', newline='') as f:
         csvwriter = csv.writer(f, delimiter=',')
-        csvwriter.writerow(['analysis_type','study_id','patient','sex','status','sample','qc_tools','qc_file',"genome_build", 'experiment', 'library_strandedness', 'sequencing_date', 'analysis_json'])
+        csvwriter.writerow(['analysis_type','study_id','patient','sex','status','sample','qc_tools','qc_file',"genome_build", 'experiment','analysis_json'])
 
         for fp in args.input_files:
           for fq in song_analysis['files']:
@@ -380,7 +377,7 @@ def main():
             os.symlink(os.path.abspath(fp), qc_file)
             qc_tools = ','.join(fq['info']['analysis_tools'])
 
-          csvwriter.writerow([analysis_type, study_id, donor_id, sex, status, sample_id, qc_tools, qc_file, genome_build, experiment, library_strandedness, sequencing_date, metadata_json])
+          csvwriter.writerow([analysis_type, study_id, donor_id, sex, status, sample_id, qc_tools, qc_file, genome_build, experiment, metadata_json]) 
 
 if __name__ == "__main__":
     main()

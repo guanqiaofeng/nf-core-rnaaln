@@ -38,7 +38,7 @@ workflow RNAALN {
                             .mix( Channel.fromPath(params.reference_fai)
                             .map{ path -> [ [id: 'fai'], path ] } )
 
-    // HISAT2_ALIGN each read group
+    // HISAT2_ALIGN
     if (params.tools.split(',').contains('hisat2_aln')){
 
         index = Channel.fromPath(params.hisat2_index).collect()
@@ -47,64 +47,85 @@ workflow RNAALN {
         splicesites = Channel.fromPath(params.reference_splicesites).collect()
                     .map { path -> [ [id: 'splicesites'], path ] }
 
+        // HISAT2_ALIGN in read group level
         HISAT2_ALIGN(
             STAGE_INPUT.out.meta_files,
             index,
             splicesites
         )
-
         ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions)
 
-        // HISAT2_ALIGN.out.bam.subscribe { println("Bam Output: ${it}") }
+        HISAT2_ALIGN.out.bam.subscribe {println("Bam output: ${it}")}
 
+        // MERG_SORT_DUP in sample level
         MERG_SORT_DUP_H( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
             HISAT2_ALIGN.out.bam,
             ch_ref
         )
-
         ch_versions = ch_versions.mix(MERG_SORT_DUP_H.out.versions)
+
+        MERG_SORT_DUP_H.out.cram_alignment_index.subscribe {println("Cram Output: ${it}")}
+
+        // Combine channels to determine upload status and payload creation
+        MERG_SORT_DUP_H.out.cram_alignment_index
+        .combine(STAGE_INPUT.out.upRdpc)
+        .combine(STAGE_INPUT.out.meta_analysis)
+        .combine(
+            ch_ref.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
+        ).map{
+            meta,cram,crai,upRdpc,metaB,analysis,ref ->
+            [
+                [
+                    id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
+                    patient:"${meta.patient}",
+                    sex:"${meta.sex}",
+                    sample:"${meta.sample}",
+                    read_group:"${meta.read_group}",
+                    data_type:"${meta.data_type}",
+                    date : "${meta.date}",
+                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    read_groups_count: "${meta.numLanes}",
+                    study_id : "${meta.study_id}",
+                    date :"${new Date().format("yyyyMMdd")}",
+                    upRdpc : upRdpc
+                ],[cram,crai],analysis
+            ]
+        }.branch{
+            upload : it[0].upRdpc
+        }
+        .set{ch_h_aln_payload}
+
+        ch_h_aln_payload.subscribe { println("Payload Output: ${it}") }
+
+
 
     }
 
     // STAR_ALIGN each read group
-    if (params.tools.split(',').contains('star_aln')){
+    // if (params.tools.split(',').contains('star_aln')){
 
-        index = Channel.fromPath(params.star_index).collect()
-                .map { path -> [ [id: 'index'], path ] }
+    //     index = Channel.fromPath(params.star_index).collect()
+    //             .map { path -> [ [id: 'index'], path ] }
 
-        gtf = Channel.fromPath(params.reference_gtf).collect()
-                    .map { path -> [ [id: 'gtf'], path ] }
+    //     gtf = Channel.fromPath(params.reference_gtf).collect()
+    //                 .map { path -> [ [id: 'gtf'], path ] }
 
-        STAR_ALIGN(
-            STAGE_INPUT.out.meta_files,
-            index,
-            gtf
-        )
+    //     // STAR_ALIGN in read group level
+    //     STAR_ALIGN(
+    //         STAGE_INPUT.out.meta_files,
+    //         index,
+    //         gtf
+    //     )
+    //     ch_versions = ch_versions.mix(STAR_ALIGN.out.versions)
 
-        ch_versions = ch_versions.mix(STAR_ALIGN.out.versions)
+    //     // MERG_SORT_DUP in sample level
+    //     MERG_SORT_DUP_S( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
+    //         STAR_ALIGN.out.bam,
+    //         ch_ref
+    //     )
+    //     ch_versions = ch_versions.mix(MERG_SORT_DUP_S.out.versions)
 
-        // STAR_ALIGN.out.bam.subscribe { println("Star bam Input: ${it}") }
-
-        //Merge read groups into one file follow by sort,indexing,optinal markDup and CRAM conversion
-
-        // ch_ref = Channel.fromPath(params.reference_fasta)
-        //                     .map{ path -> [ [id: 'fasta'], path ] }
-        //                     .mix( Channel.fromPath(params.reference_fai)
-        //                     .map{ path -> [ [id: 'fai'], path ] } )
-
-        // ch_ref.subscribe { println("Reference Input: ${it}") }
-
-        // Create an input channel with the metadata and the reference files path
-
-
-        MERG_SORT_DUP_S( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
-            STAR_ALIGN.out.bam,
-            ch_ref
-        )
-
-        ch_versions = ch_versions.mix(MERG_SORT_DUP_S.out.versions)
-
-    }
+    // }
 
     // MERGE_SORT_DUP
 

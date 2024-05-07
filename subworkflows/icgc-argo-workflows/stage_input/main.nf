@@ -77,10 +77,8 @@ workflow STAGE_INPUT {
                 numLanes:row.read_group_count,
                 experiment:row.experiment,
                 single_end : row.single_end.toBoolean(),
-                sequencing_center: row.sequencing_center,
                 library_strandedness: row.library_strandedness,
-                platform: row.platform,
-                sequencing_date: row.sequencing_date
+                date: row.sequencing_date
             ],
             [file(row.fastq_1,checkIfExists: true), file(row.fastq_2,checkIfExists: true)],
             row.analysis_json
@@ -99,10 +97,8 @@ workflow STAGE_INPUT {
                 numLanes:row.read_group_count,
                 experiment:row.experiment,
                 single_end : row.single_end.toBoolean(),
-                sequencing_center: row.sequencing_center,
                 library_strandedness: row.library_strandedness,
-                platform: row.platform,
-                sequencing_date: row.sequencing_date
+                date: row.sequencing_date
             ],
             [file(row.fastq_1,checkIfExists: true)],
             row.analysis_json
