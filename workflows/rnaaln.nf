@@ -6,11 +6,15 @@
 
 include { STAGE_INPUT } from '../subworkflows/icgc-argo-workflows/stage_input/main'
 include { SONG_SCORE_DOWNLOAD } from '../subworkflows/icgc-argo-workflows/song_score_download/main'
-include { SONG_SCORE_UPLOAD } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
+// include { SONG_SCORE_UPLOAD } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { HISAT2_ALIGN } from '../modules/local/hisat2/align/main'
 include { STAR_ALIGN } from '../modules/local/star/align/main'
 include { MERG_SORT_DUP as MERG_SORT_DUP_S } from '../subworkflows/icgc-argo-workflows/merg_sort_dup/main'
 include { MERG_SORT_DUP as MERG_SORT_DUP_H } from '../subworkflows/icgc-argo-workflows/merg_sort_dup/main'
+include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_S } from '../modules/local/payload/rnaseqalignment/main'
+include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_H } from '../modules/local/payload/rnaseqalignment/main'
+include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
+include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -30,7 +34,7 @@ workflow RNAALN {
         )
 
     ch_versions = ch_versions.mix(STAGE_INPUT.out.versions)
-    STAGE_INPUT.out.meta_files.subscribe { println("Meta Files Output: ${it}") }
+    // STAGE_INPUT.out.meta_files.subscribe { println("Meta Files Output: ${it}") }
 
     // Prepare reference file [meta fasta] [meta, fai]
     ch_ref = Channel.fromPath(params.reference_fasta)
@@ -54,6 +58,8 @@ workflow RNAALN {
             splicesites
         )
         ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions)
+
+        HISAT2_ALIGN.out.versions.subscribe {println("HISAT2 version output: ${it}")}
 
         HISAT2_ALIGN.out.bam.subscribe {println("Bam output: ${it}")}
 
@@ -95,9 +101,24 @@ workflow RNAALN {
         }
         .set{ch_h_aln_payload}
 
-        ch_h_aln_payload.subscribe { println("Payload Output: ${it}") }
+        ch_h_aln_payload.subscribe { println("Payload Prepare: ${it}") }
 
+        // Make payload
+        PAYLOAD_ALIGNMENT_H(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
+            ch_h_aln_payload.upload,
+            Channel.empty()
+            .mix(STAGE_INPUT.out.versions)
+            .mix(HISAT2_ALIGN.out.versions)
+            .mix(MERG_SORT_DUP_H.out.versions)
+            .collectFile(name: 'collated_versions.yml')
+        )
+        ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
+        PAYLOAD_ALIGNMENT_H.out.payload_files.subscribe { println("Payload Files: ${it}") }
 
+        // Upload files
+        UPLOAD_ALIGNMENT_H(PAYLOAD_ALIGNMENT_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
+        ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_H.out.versions)
+        UPLOAD_ALIGNMENT_H.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
 
     }
 

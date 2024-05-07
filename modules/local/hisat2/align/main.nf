@@ -62,6 +62,10 @@ process HISAT2_ALIGN {
     sort -k1,1 -k2,3n -k4,4 -u ${prefix}.novel_splicesites.txt > ${prefix}.hisat2.novel_splicesites.txt
     rm ${prefix}.novel_splicesites.txt
 
-    echo "hisat2: $VERSION\nsamtools: \$(samtools --version | sed 's/^.*samtools //; s/Using.*\$//')" > versions.yml
+
+    echo "hisat2: $VERSION\nsamtools: \$(samtools --version | sed -n '1 s/^.*samtools //p')" > versions.yml
+
     """
 }
+
+// echo "hisat2: $VERSION\nsamtools: \$(samtools --version | sed 's/^.*samtools //; s/Using.*\$//')" > versions.yml
