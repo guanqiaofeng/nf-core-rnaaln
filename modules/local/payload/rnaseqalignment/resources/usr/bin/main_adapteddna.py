@@ -126,6 +126,11 @@ def main(args):
       with open(args.pipeline_yml, 'r') as f:
         pipeline_info = yaml.safe_load(f)
 
+    for key, value in pipeline_info.items():
+        for sub_key, sub_value in value.items():
+            value[sub_key] = str(sub_value)
+        pipeline_info[key] = value
+
     payload = {
         'analysisType': {
             'name': 'sequencing_alignment'
