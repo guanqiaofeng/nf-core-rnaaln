@@ -6,7 +6,6 @@
 
 include { STAGE_INPUT } from '../subworkflows/icgc-argo-workflows/stage_input/main'
 include { SONG_SCORE_DOWNLOAD } from '../subworkflows/icgc-argo-workflows/song_score_download/main'
-// include { SONG_SCORE_UPLOAD } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { HISAT2_ALIGN } from '../modules/local/hisat2/align/main'
 include { STAR_ALIGN } from '../modules/local/star/align/main'
 include { MERG_SORT_DUP as MERG_SORT_DUP_S } from '../subworkflows/icgc-argo-workflows/merg_sort_dup/main'
@@ -115,7 +114,7 @@ workflow RNAALN {
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
         PAYLOAD_ALIGNMENT_H.out.payload_files.subscribe { println("Payload Files: ${it}") }
 
-        // Upload files
+        // // Upload files
         UPLOAD_ALIGNMENT_H(PAYLOAD_ALIGNMENT_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_H.out.versions)
         UPLOAD_ALIGNMENT_H.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
@@ -123,30 +122,81 @@ workflow RNAALN {
     }
 
     // STAR_ALIGN each read group
-    // if (params.tools.split(',').contains('star_aln')){
+    if (params.tools.split(',').contains('star_aln')){
 
-    //     index = Channel.fromPath(params.star_index).collect()
-    //             .map { path -> [ [id: 'index'], path ] }
+        index = Channel.fromPath(params.star_index).collect()
+                .map { path -> [ [id: 'index'], path ] }
 
-    //     gtf = Channel.fromPath(params.reference_gtf).collect()
-    //                 .map { path -> [ [id: 'gtf'], path ] }
+        gtf = Channel.fromPath(params.reference_gtf).collect()
+                    .map { path -> [ [id: 'gtf'], path ] }
 
-    //     // STAR_ALIGN in read group level
-    //     STAR_ALIGN(
-    //         STAGE_INPUT.out.meta_files,
-    //         index,
-    //         gtf
-    //     )
-    //     ch_versions = ch_versions.mix(STAR_ALIGN.out.versions)
+        // STAR_ALIGN in read group level
+        STAR_ALIGN(
+            STAGE_INPUT.out.meta_files,
+            index,
+            gtf
+        )
+        ch_versions = ch_versions.mix(STAR_ALIGN.out.versions)
 
-    //     // MERG_SORT_DUP in sample level
-    //     MERG_SORT_DUP_S( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
-    //         STAR_ALIGN.out.bam,
-    //         ch_ref
-    //     )
-    //     ch_versions = ch_versions.mix(MERG_SORT_DUP_S.out.versions)
+        // MERG_SORT_DUP in sample level
+        MERG_SORT_DUP_S( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
+            STAR_ALIGN.out.bam,
+            ch_ref
+        )
+        ch_versions = ch_versions.mix(MERG_SORT_DUP_S.out.versions)
 
-    // }
+        MERG_SORT_DUP_S.out.cram_alignment_index.subscribe {println("Cram Output: ${it}")}
+
+        // Combine channels to determine upload status and payload creation
+        MERG_SORT_DUP_S.out.cram_alignment_index
+        .combine(STAGE_INPUT.out.upRdpc)
+        .combine(STAGE_INPUT.out.meta_analysis)
+        .combine(
+            ch_ref.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
+        ).map{
+            meta,cram,crai,upRdpc,metaB,analysis,ref ->
+            [
+                [
+                    id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
+                    patient:"${meta.patient}",
+                    sex:"${meta.sex}",
+                    sample:"${meta.sample}",
+                    read_group:"${meta.read_group}",
+                    data_type:"${meta.data_type}",
+                    date : "${meta.date}",
+                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    read_groups_count: "${meta.numLanes}",
+                    study_id : "${meta.study_id}",
+                    date :"${new Date().format("yyyyMMdd")}",
+                    upRdpc : upRdpc
+                ],[cram,crai],analysis
+            ]
+        }.branch{
+            upload : it[0].upRdpc
+        }
+        .set{ch_s_aln_payload}
+
+        ch_s_aln_payload.subscribe { println("Payload Prepare: ${it}") }
+
+        // // Make payload
+        PAYLOAD_ALIGNMENT_S(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
+            ch_s_aln_payload.upload,
+            Channel.empty()
+            .mix(STAGE_INPUT.out.versions)
+            .mix(STAR_ALIGN.out.versions)
+            .mix(MERG_SORT_DUP_S.out.versions)
+            .collectFile(name: 'collated_versions.yml')
+        )
+        ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_S.out.versions)
+        PAYLOAD_ALIGNMENT_S.out.payload_files.subscribe { println("Payload Files: ${it}") }
+
+        // // // Upload files
+        UPLOAD_ALIGNMENT_S(PAYLOAD_ALIGNMENT_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
+        ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_S.out.versions)
+        UPLOAD_ALIGNMENT_S.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
+
+
+    }
 
     // MERGE_SORT_DUP
 

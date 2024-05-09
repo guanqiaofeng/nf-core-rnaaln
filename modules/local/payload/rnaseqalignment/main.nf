@@ -21,10 +21,9 @@ process PAYLOAD_ALIGNMENT {
       // add and initialize variables here as needed
       def arg_pipeline_yml = pipeline_yml.name != 'NO_FILE' ? "-p $pipeline_yml" : ''
       """
-      main.py \
+      main_adapteddna.py \
         -f ${files_to_upload} \
         -a ${metadata_analysis} \
-        -b "${meta.genomeBuild}" \
         -w "RNA Seq Alignment" \
         -r ${workflow.runName} \
         -s "${workflow.sessionId}" \
@@ -38,3 +37,4 @@ process PAYLOAD_ALIGNMENT {
       END_VERSIONS
       """
   }
+//           -b "${meta.genomeBuild}" \
