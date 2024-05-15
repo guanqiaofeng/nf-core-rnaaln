@@ -168,10 +168,10 @@ workflow RNAALN {
                 aln: "hisat2"
                 ],txt.collect()
             ]
-        }.set{ch_txts}
+        }.set{ch_h_txts}
 
         // Merge novel splice sites
-        NOVEL_SPLICE_MERGE_H(ch_txts)
+        NOVEL_SPLICE_MERGE_H(ch_h_txts)
         ch_versions = ch_versions.mix(NOVEL_SPLICE_MERGE_H.out.versions)
 
         NOVEL_SPLICE_MERGE_H.out.all_novel_splice.subscribe { println("Merged Novel Splice Files: ${it}") }
@@ -243,7 +243,7 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(STAR_ALIGN.out.versions)
 
-        STAR_ALIGN.out.bam.subscribe { println("bam Files: ${it}") }
+        // STAR_ALIGN.out.bam.subscribe { println("bam Files: ${it}") }
 
         // MERG_SORT_DUP in sample level
         MERG_SORT_DUP_S( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
@@ -252,7 +252,7 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(MERG_SORT_DUP_S.out.versions)
 
-        MERG_SORT_DUP_S.out.cram_alignment_index.subscribe {println("Cram Output: ${it}")}
+        // MERG_SORT_DUP_S.out.cram_alignment_index.subscribe {println("Cram Output: ${it}")}
 
         // Combine channels to determine upload status and payload creation
         MERG_SORT_DUP_S.out.cram_alignment_index
@@ -283,9 +283,9 @@ workflow RNAALN {
         }
         .set{ch_s_aln_payload}
 
-        ch_s_aln_payload.subscribe { println("Payload Prepare: ${it}") }
+        // ch_s_aln_payload.subscribe { println("Payload Prepare: ${it}") }
 
-        // Make payload
+        // Make payload - alignment
         PAYLOAD_ALIGNMENT_S(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
             ch_s_aln_payload.upload,
             Channel.empty()
@@ -295,12 +295,115 @@ workflow RNAALN {
             .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_S.out.versions)
-        PAYLOAD_ALIGNMENT_S.out.payload_files.subscribe { println("Payload Files: ${it}") }
+        // PAYLOAD_ALIGNMENT_S.out.payload_files.subscribe { println("Payload Files: ${it}") }
 
-        // Upload files
+        // Upload files - alignment
         UPLOAD_ALIGNMENT_S(PAYLOAD_ALIGNMENT_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_S.out.versions)
-        UPLOAD_ALIGNMENT_S.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
+        // UPLOAD_ALIGNMENT_S.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
+
+        // spl_junc_tab
+        // Collect Novel Splice sites
+        STAR_ALIGN.out.spl_junc_tab.flatten().buffer( size: 2 )
+        .map{
+            meta,txt ->
+            [
+                [
+                id:"${meta.study_id}.${meta.patient}.${meta.sample}",
+                study_id:"${meta.study_id}",
+                patient:"${meta.patient}",
+                sex:"${meta.sex}",
+                sample:"${meta.sample}",
+                numLanes:"${meta.numLanes}",
+                experiment:"${meta.experiment}",
+                date:"${meta.date}",
+                tool: "${meta.tool}"
+                ],
+                [
+                read_group:"${meta.id}",
+                data_type:"${meta.data_type}",
+                size:"${meta.size}",
+                ],
+                txt
+            ]
+        }.groupTuple(by: 0)
+        .map{
+            meta,info,txt ->
+            [
+                [
+                id:"${meta.study_id}.${meta.patient}.${meta.sample}",
+                study_id:"${meta.study_id}",
+                patient:"${meta.patient}",
+                sex:"${meta.sex}",
+                sample:"${meta.sample}",
+                numLanes:"${meta.numLanes}",
+                experiment:"${meta.experiment}",
+                date:"${meta.date}",
+                read_group:"${info.read_group.collect()}",
+                data_type:"${info.data_type.collect()}",
+                size:"${info.size.collect()}",
+                tool: "${meta.tool}",
+                aln: "star"
+                ],txt.collect()
+            ]
+        }.set{ch_s_txts}
+
+        ch_s_txts.subscribe { println("star novel splice files: ${it}") }
+
+        // Merge novel splice sites
+        NOVEL_SPLICE_MERGE_S(ch_s_txts)
+        ch_versions = ch_versions.mix(NOVEL_SPLICE_MERGE_S.out.versions)
+
+        NOVEL_SPLICE_MERGE_S.out.all_novel_splice.subscribe { println("Merged Novel Splice Files: ${it}") }
+        ch_versions.subscribe { println("Channel version after splice merge: ${it}") }
+
+        // Combine channels to determine upload status and payload creation
+        NOVEL_SPLICE_MERGE_S.out.all_novel_splice
+        .combine(STAGE_INPUT.out.upRdpc)
+        .combine(STAGE_INPUT.out.meta_analysis)
+        .combine(
+            ch_ref.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
+        ).map{
+            meta,txt,upRdpc,metaB,analysis,ref ->
+            [
+                [
+                    id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
+                    patient:"${meta.patient}",
+                    sex:"${meta.sex}",
+                    sample:"${meta.sample}",
+                    read_group:"${meta.read_group}",
+                    data_type:"${meta.data_type}",
+                    date : "${meta.date}",
+                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    read_groups_count: "${meta.numLanes}",
+                    study_id : "${meta.study_id}",
+                    date :"${new Date().format("yyyyMMdd")}",
+                    upRdpc : upRdpc
+                ],txt,analysis
+            ]
+        }.branch{
+            upload : it[0].upRdpc
+        }
+        .set{ch_s_novel_splice_payload}
+
+        ch_s_novel_splice_payload.subscribe { println("Novel Splice Payload Prepare: ${it}") }
+
+        // Make payload - novel splice sites
+        PAYLOAD_NOVEL_SPLICE_S(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
+            ch_s_novel_splice_payload.upload,
+            Channel.empty()
+            .mix(STAGE_INPUT.out.versions)
+            .mix(STAR_ALIGN.out.versions)
+            .mix(MERG_SORT_DUP_S.out.versions)
+            .collectFile(name: 'collated_versions.yml')
+        )
+        ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_S.out.versions)
+        PAYLOAD_NOVEL_SPLICE_S.out.payload_files.subscribe { println("Novel Splice Payload Files: ${it}") }
+
+        // Upload files - aligment
+        UPLOAD_NOVEL_SPLICE_S(PAYLOAD_NOVEL_SPLICE_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
+        ch_versions = ch_versions.mix(UPLOAD_NOVEL_SPLICE_S.out.versions)
+        UPLOAD_NOVEL_SPLICE_S.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
 
 
     }
