@@ -18,6 +18,8 @@ include { NOVEL_SPLICE_MERGE as NOVEL_SPLICE_MERGE_S } from '../modules/local/no
 include { NOVEL_SPLICE_MERGE as NOVEL_SPLICE_MERGE_H } from '../modules/local/novelsplice/main.nf'
 include { PAYLOAD_NOVEL_SPLICE as PAYLOAD_NOVEL_SPLICE_S } from '../modules/local/payload/novel_splice/main'
 include { PAYLOAD_NOVEL_SPLICE as PAYLOAD_NOVEL_SPLICE_H } from '../modules/local/payload/novel_splice/main'
+include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
+include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -206,8 +208,8 @@ workflow RNAALN {
         ch_h_novel_splice_payload.subscribe { println("Novel Splice Payload Prepare: ${it}") }
 
         // Make payload - novel splice sites
-        PAYLOAD_ALIGNMENT_H(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
-            ch_h_aln_payload.upload,
+        PAYLOAD_NOVEL_SPLICE_H(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
+            ch_h_novel_splice_payload.upload,
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
             .mix(HISAT2_ALIGN.out.versions)
@@ -215,7 +217,12 @@ workflow RNAALN {
             .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
-        // PAYLOAD_ALIGNMENT_H.out.payload_files.subscribe { println("Payload Files: ${it}") }
+        PAYLOAD_NOVEL_SPLICE_H.out.payload_files.subscribe { println("Novel Splice Payload Files: ${it}") }
+
+        // Upload files - aligment
+        UPLOAD_NOVEL_SPLICE_H(PAYLOAD_NOVEL_SPLICE_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
+        ch_versions = ch_versions.mix(UPLOAD_NOVEL_SPLICE_H.out.versions)
+        UPLOAD_NOVEL_SPLICE_H.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
 
     }
 
