@@ -14,6 +14,10 @@ include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_S } from '../modules/local/payl
 include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_H } from '../modules/local/payload/rnaseqalignment/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
+include { NOVEL_SPLICE_MERGE as NOVEL_SPLICE_MERGE_S } from '../modules/local/novelsplice/main.nf'
+include { NOVEL_SPLICE_MERGE as NOVEL_SPLICE_MERGE_H } from '../modules/local/novelsplice/main.nf'
+include { PAYLOAD_NOVEL_SPLICE as PAYLOAD_NOVEL_SPLICE_S } from '../modules/local/payload/novel_splice/main'
+include { PAYLOAD_NOVEL_SPLICE as PAYLOAD_NOVEL_SPLICE_H } from '../modules/local/payload/novel_splice/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,7 +62,7 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions)
 
-        HISAT2_ALIGN.out.versions.subscribe {println("HISAT2 version output: ${it}")}
+        // HISAT2_ALIGN.out.versions.subscribe {println("HISAT2 version output: ${it}")}
 
         HISAT2_ALIGN.out.bam.subscribe {println("Bam output: ${it}")}
 
@@ -69,7 +73,7 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(MERG_SORT_DUP_H.out.versions)
 
-        MERG_SORT_DUP_H.out.cram_alignment_index.subscribe {println("Cram Output: ${it}")}
+        // MERG_SORT_DUP_H.out.cram_alignment_index.subscribe {println("Cram Output: ${it}")}
 
         // Combine channels to determine upload status and payload creation
         MERG_SORT_DUP_H.out.cram_alignment_index
@@ -100,9 +104,9 @@ workflow RNAALN {
         }
         .set{ch_h_aln_payload}
 
-        ch_h_aln_payload.subscribe { println("Payload Prepare: ${it}") }
+        // ch_h_aln_payload.subscribe { println("Payload Prepare: ${it}") }
 
-        // Make payload
+        // Make payload - alignment
         PAYLOAD_ALIGNMENT_H(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
             ch_h_aln_payload.upload,
             Channel.empty()
@@ -112,12 +116,106 @@ workflow RNAALN {
             .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
-        PAYLOAD_ALIGNMENT_H.out.payload_files.subscribe { println("Payload Files: ${it}") }
+        // PAYLOAD_ALIGNMENT_H.out.payload_files.subscribe { println("Payload Files: ${it}") }
 
-        // // Upload files
+        // Upload files - aligment
         UPLOAD_ALIGNMENT_H(PAYLOAD_ALIGNMENT_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_H.out.versions)
-        UPLOAD_ALIGNMENT_H.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
+        // UPLOAD_ALIGNMENT_H.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
+
+        // Collect Novel Splice sites
+        HISAT2_ALIGN.out.novel_splice.flatten().buffer( size: 2 )
+        .map{
+            meta,txt ->
+            [
+                [
+                id:"${meta.study_id}.${meta.patient}.${meta.sample}",
+                study_id:"${meta.study_id}",
+                patient:"${meta.patient}",
+                sex:"${meta.sex}",
+                sample:"${meta.sample}",
+                numLanes:"${meta.numLanes}",
+                experiment:"${meta.experiment}",
+                date:"${meta.date}",
+                tool: "${meta.tool}"
+                ],
+                [
+                read_group:"${meta.id}",
+                data_type:"${meta.data_type}",
+                size:"${meta.size}",
+                ],
+                txt
+            ]
+        }.groupTuple(by: 0)
+        .map{
+            meta,info,txt ->
+            [
+                [
+                id:"${meta.study_id}.${meta.patient}.${meta.sample}",
+                study_id:"${meta.study_id}",
+                patient:"${meta.patient}",
+                sex:"${meta.sex}",
+                sample:"${meta.sample}",
+                numLanes:"${meta.numLanes}",
+                experiment:"${meta.experiment}",
+                date:"${meta.date}",
+                read_group:"${info.read_group.collect()}",
+                data_type:"${info.data_type.collect()}",
+                size:"${info.size.collect()}",
+                tool: "${meta.tool}",
+                aln: "hisat2"
+                ],txt.collect()
+            ]
+        }.set{ch_txts}
+
+        // Merge novel splice sites
+        NOVEL_SPLICE_MERGE_H(ch_txts)
+        ch_versions = ch_versions.mix(NOVEL_SPLICE_MERGE_H.out.versions)
+
+        NOVEL_SPLICE_MERGE_H.out.all_novel_splice.subscribe { println("Merged Novel Splice Files: ${it}") }
+
+        // Combine channels to determine upload status and payload creation
+        NOVEL_SPLICE_MERGE_H.out.all_novel_splice
+        .combine(STAGE_INPUT.out.upRdpc)
+        .combine(STAGE_INPUT.out.meta_analysis)
+        .combine(
+            ch_ref.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
+        ).map{
+            meta,txt,upRdpc,metaB,analysis,ref ->
+            [
+                [
+                    id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
+                    patient:"${meta.patient}",
+                    sex:"${meta.sex}",
+                    sample:"${meta.sample}",
+                    read_group:"${meta.read_group}",
+                    data_type:"${meta.data_type}",
+                    date : "${meta.date}",
+                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    read_groups_count: "${meta.numLanes}",
+                    study_id : "${meta.study_id}",
+                    date :"${new Date().format("yyyyMMdd")}",
+                    upRdpc : upRdpc
+                ],txt,analysis
+            ]
+        }.branch{
+            upload : it[0].upRdpc
+        }
+        .set{ch_h_novel_splice_payload}
+
+        ch_h_novel_splice_payload.subscribe { println("Novel Splice Payload Prepare: ${it}") }
+
+        // Make payload - novel splice sites
+        PAYLOAD_ALIGNMENT_H(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
+            ch_h_aln_payload.upload,
+            Channel.empty()
+            .mix(STAGE_INPUT.out.versions)
+            .mix(HISAT2_ALIGN.out.versions)
+            .mix(MERG_SORT_DUP_H.out.versions)
+            .collectFile(name: 'collated_versions.yml')
+        )
+        ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
+        // PAYLOAD_ALIGNMENT_H.out.payload_files.subscribe { println("Payload Files: ${it}") }
 
     }
 
@@ -137,6 +235,8 @@ workflow RNAALN {
             gtf
         )
         ch_versions = ch_versions.mix(STAR_ALIGN.out.versions)
+
+        STAR_ALIGN.out.bam.subscribe { println("bam Files: ${it}") }
 
         // MERG_SORT_DUP in sample level
         MERG_SORT_DUP_S( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
@@ -178,7 +278,7 @@ workflow RNAALN {
 
         ch_s_aln_payload.subscribe { println("Payload Prepare: ${it}") }
 
-        // // Make payload
+        // Make payload
         PAYLOAD_ALIGNMENT_S(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
             ch_s_aln_payload.upload,
             Channel.empty()
@@ -190,7 +290,7 @@ workflow RNAALN {
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_S.out.versions)
         PAYLOAD_ALIGNMENT_S.out.payload_files.subscribe { println("Payload Files: ${it}") }
 
-        // // // Upload files
+        // Upload files
         UPLOAD_ALIGNMENT_S(PAYLOAD_ALIGNMENT_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_S.out.versions)
         UPLOAD_ALIGNMENT_S.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
