@@ -47,16 +47,17 @@ workflow RNAALN {
                             .mix( Channel.fromPath(params.reference_fai)
                             .map{ path -> [ [id: 'fai'], path ] } )
 
-    // HISAT2_ALIGN
+    // HISAT2 //
     if (params.tools.split(',').contains('hisat2_aln')){
 
+        // HISAT2 - ALIGN //
         index = Channel.fromPath(params.hisat2_index).collect()
                 .map { path -> [ [id: 'index'], path ] }
 
         splicesites = Channel.fromPath(params.reference_splicesites).collect()
                     .map { path -> [ [id: 'splicesites'], path ] }
 
-        // HISAT2_ALIGN in read group level
+        // ALN in read group level
         HISAT2_ALIGN(
             STAGE_INPUT.out.meta_files,
             index,
@@ -64,18 +65,12 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions)
 
-        // HISAT2_ALIGN.out.versions.subscribe {println("HISAT2 version output: ${it}")}
-
-        HISAT2_ALIGN.out.bam.subscribe {println("Bam output: ${it}")}
-
-        // MERG_SORT_DUP in sample level
+        // MERG in sample level
         MERG_SORT_DUP_H( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
             HISAT2_ALIGN.out.bam,
             ch_ref
         )
         ch_versions = ch_versions.mix(MERG_SORT_DUP_H.out.versions)
-
-        // MERG_SORT_DUP_H.out.cram_alignment_index.subscribe {println("Cram Output: ${it}")}
 
         // Combine channels to determine upload status and payload creation
         MERG_SORT_DUP_H.out.cram_alignment_index
@@ -106,9 +101,7 @@ workflow RNAALN {
         }
         .set{ch_h_aln_payload}
 
-        // ch_h_aln_payload.subscribe { println("Payload Prepare: ${it}") }
-
-        // Make payload - alignment
+        // Make ALN payload
         PAYLOAD_ALIGNMENT_H(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
             ch_h_aln_payload.upload,
             Channel.empty()
@@ -118,14 +111,13 @@ workflow RNAALN {
             .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
-        // PAYLOAD_ALIGNMENT_H.out.payload_files.subscribe { println("Payload Files: ${it}") }
 
         // Upload files - aligment
         UPLOAD_ALIGNMENT_H(PAYLOAD_ALIGNMENT_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_H.out.versions)
-        // UPLOAD_ALIGNMENT_H.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
 
-        // Collect Novel Splice sites
+        // HISAT2 - SPLICE JUNCTION //
+        // Collect Splice Junctions
         HISAT2_ALIGN.out.novel_splice.flatten().buffer( size: 2 )
         .map{
             meta,txt ->
@@ -170,11 +162,9 @@ workflow RNAALN {
             ]
         }.set{ch_h_txts}
 
-        // Merge novel splice sites
+        // MERG splice junctions in sample level
         NOVEL_SPLICE_MERGE_H(ch_h_txts)
         ch_versions = ch_versions.mix(NOVEL_SPLICE_MERGE_H.out.versions)
-
-        NOVEL_SPLICE_MERGE_H.out.all_novel_splice.subscribe { println("Merged Novel Splice Files: ${it}") }
 
         // Combine channels to determine upload status and payload creation
         NOVEL_SPLICE_MERGE_H.out.all_novel_splice
@@ -205,37 +195,34 @@ workflow RNAALN {
         }
         .set{ch_h_novel_splice_payload}
 
-        ch_h_novel_splice_payload.subscribe { println("Novel Splice Payload Prepare: ${it}") }
-
-        // Make payload - novel splice sites
+        // Make payload - splice junctions
         PAYLOAD_NOVEL_SPLICE_H(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
             ch_h_novel_splice_payload.upload,
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
             .mix(HISAT2_ALIGN.out.versions)
-            .mix(MERG_SORT_DUP_H.out.versions)
+            .mix(NOVEL_SPLICE_MERGE_H.out.versions)
             .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
-        PAYLOAD_NOVEL_SPLICE_H.out.payload_files.subscribe { println("Novel Splice Payload Files: ${it}") }
 
         // Upload files - aligment
         UPLOAD_NOVEL_SPLICE_H(PAYLOAD_NOVEL_SPLICE_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_NOVEL_SPLICE_H.out.versions)
-        UPLOAD_NOVEL_SPLICE_H.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
 
     }
 
-    // STAR_ALIGN each read group
+    // STAR //
     if (params.tools.split(',').contains('star_aln')){
 
+        // STAR - alignment //
         index = Channel.fromPath(params.star_index).collect()
                 .map { path -> [ [id: 'index'], path ] }
 
         gtf = Channel.fromPath(params.reference_gtf).collect()
                     .map { path -> [ [id: 'gtf'], path ] }
 
-        // STAR_ALIGN in read group level
+        // ALN in readgroup level
         STAR_ALIGN(
             STAGE_INPUT.out.meta_files,
             index,
@@ -243,16 +230,12 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(STAR_ALIGN.out.versions)
 
-        // STAR_ALIGN.out.bam.subscribe { println("bam Files: ${it}") }
-
-        // MERG_SORT_DUP in sample level
+        // MERG in sample level
         MERG_SORT_DUP_S( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
             STAR_ALIGN.out.bam,
             ch_ref
         )
         ch_versions = ch_versions.mix(MERG_SORT_DUP_S.out.versions)
-
-        // MERG_SORT_DUP_S.out.cram_alignment_index.subscribe {println("Cram Output: ${it}")}
 
         // Combine channels to determine upload status and payload creation
         MERG_SORT_DUP_S.out.cram_alignment_index
@@ -283,8 +266,6 @@ workflow RNAALN {
         }
         .set{ch_s_aln_payload}
 
-        // ch_s_aln_payload.subscribe { println("Payload Prepare: ${it}") }
-
         // Make payload - alignment
         PAYLOAD_ALIGNMENT_S(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
             ch_s_aln_payload.upload,
@@ -295,15 +276,13 @@ workflow RNAALN {
             .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_S.out.versions)
-        // PAYLOAD_ALIGNMENT_S.out.payload_files.subscribe { println("Payload Files: ${it}") }
 
         // Upload files - alignment
         UPLOAD_ALIGNMENT_S(PAYLOAD_ALIGNMENT_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_S.out.versions)
         // UPLOAD_ALIGNMENT_S.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
 
-        // spl_junc_tab
-        // Collect Novel Splice sites
+        // Collect Splice Junctions
         STAR_ALIGN.out.spl_junc_tab.flatten().buffer( size: 2 )
         .map{
             meta,txt ->
@@ -348,14 +327,9 @@ workflow RNAALN {
             ]
         }.set{ch_s_txts}
 
-        ch_s_txts.subscribe { println("star novel splice files: ${it}") }
-
         // Merge novel splice sites
         NOVEL_SPLICE_MERGE_S(ch_s_txts)
         ch_versions = ch_versions.mix(NOVEL_SPLICE_MERGE_S.out.versions)
-
-        NOVEL_SPLICE_MERGE_S.out.all_novel_splice.subscribe { println("Merged Novel Splice Files: ${it}") }
-        ch_versions.subscribe { println("Channel version after splice merge: ${it}") }
 
         // Combine channels to determine upload status and payload creation
         NOVEL_SPLICE_MERGE_S.out.all_novel_splice
@@ -386,25 +360,22 @@ workflow RNAALN {
         }
         .set{ch_s_novel_splice_payload}
 
-        ch_s_novel_splice_payload.subscribe { println("Novel Splice Payload Prepare: ${it}") }
-
-        // Make payload - novel splice sites
+        // Make payload - splice junction
         PAYLOAD_NOVEL_SPLICE_S(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
             ch_s_novel_splice_payload.upload,
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
             .mix(STAR_ALIGN.out.versions)
-            .mix(MERG_SORT_DUP_S.out.versions)
+            .mix(NOVEL_SPLICE_MERGE_S.out.versions)
             .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_S.out.versions)
-        PAYLOAD_NOVEL_SPLICE_S.out.payload_files.subscribe { println("Novel Splice Payload Files: ${it}") }
 
         // Upload files - aligment
         UPLOAD_NOVEL_SPLICE_S(PAYLOAD_NOVEL_SPLICE_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_NOVEL_SPLICE_S.out.versions)
-        UPLOAD_NOVEL_SPLICE_S.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
 
+        // Collect QC Metrics
 
     }
 

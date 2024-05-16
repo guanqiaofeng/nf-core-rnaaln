@@ -1,0 +1,882 @@
+digraph "flowchart" {
+v0 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.empty"];
+v42 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v0 -> v42 [label="ch_versions"];
+
+v1 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.empty"];
+v12 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v1 -> v12 [label="ch_versions"];
+
+v2 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.from"];
+v3 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v2 -> v3;
+
+v3 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v5 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:SONG_SCORE_DOWNLOAD:songGet"];
+v3 -> v5 [label="study_analysis"];
+
+v4 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.empty"];
+v7 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v4 -> v7 [label="ch_versions"];
+
+v5 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:SONG_SCORE_DOWNLOAD:songGet"];
+v8 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:SONG_SCORE_DOWNLOAD:scoreDn"];
+v5 -> v8;
+
+v5 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:SONG_SCORE_DOWNLOAD:songGet"];
+v6 [shape=point];
+v5 -> v6 [label="analysis_json"];
+
+v5 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:SONG_SCORE_DOWNLOAD:songGet"];
+v7 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v5 -> v7;
+
+v7 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v11 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v7 -> v11 [label="ch_versions"];
+
+v8 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:SONG_SCORE_DOWNLOAD:scoreDn"];
+v10 [shape=point];
+v8 -> v10 [label="analysis"];
+
+v8 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:SONG_SCORE_DOWNLOAD:scoreDn"];
+v9 [shape=point];
+v8 -> v9 [label="files"];
+
+v8 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:SONG_SCORE_DOWNLOAD:scoreDn"];
+v13 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:PREP_SAMPLE"];
+v8 -> v13 [label="analysis_files"];
+
+v8 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:SONG_SCORE_DOWNLOAD:scoreDn"];
+v11 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v8 -> v11;
+
+v11 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v12 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v11 -> v12 [label="versions"];
+
+v12 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v14 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v12 -> v14 [label="ch_versions"];
+
+v13 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:PREP_SAMPLE"];
+v15 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collectFile"];
+v13 -> v15 [label="analysis_input"];
+
+v13 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:PREP_SAMPLE"];
+v14 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v13 -> v14;
+
+v14 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v42 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v14 -> v42 [label="versions"];
+
+v15 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collectFile"];
+v16 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="splitCsv"];
+v15 -> v16;
+
+v16 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="splitCsv"];
+v17 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v16 -> v17;
+
+v17 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v18 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v17 -> v18 [label="ch_input_sample"];
+
+v18 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v19 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v18 -> v19;
+
+v19 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v20 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:BAM_INDEX"];
+v19 -> v20;
+
+v19 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v24 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:CRAM_INDEX"];
+v19 -> v24;
+
+v19 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v28 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:TABIX_TABIX"];
+v19 -> v28;
+
+v19 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v38 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v19 -> v38;
+
+v19 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v39 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v19 -> v39;
+
+v20 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:BAM_INDEX"];
+v31 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="join"];
+v20 -> v31;
+
+v20 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:BAM_INDEX"];
+v23 [shape=point];
+v20 -> v23;
+
+v20 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:BAM_INDEX"];
+v22 [shape=point];
+v20 -> v22;
+
+v20 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:BAM_INDEX"];
+v21 [shape=point];
+v20 -> v21;
+
+v24 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:CRAM_INDEX"];
+v27 [shape=point];
+v24 -> v27;
+
+v24 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:CRAM_INDEX"];
+v26 [shape=point];
+v24 -> v26;
+
+v24 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:CRAM_INDEX"];
+v32 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="join"];
+v24 -> v32;
+
+v24 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:CRAM_INDEX"];
+v25 [shape=point];
+v24 -> v25;
+
+v28 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:TABIX_TABIX"];
+v33 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="join"];
+v28 -> v33;
+
+v28 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:TABIX_TABIX"];
+v30 [shape=point];
+v28 -> v30;
+
+v28 [label="NFCORE_RNAALN:RNAALN:STAGE_INPUT:TABIX_TABIX"];
+v29 [shape=point];
+v28 -> v29;
+
+v19 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v31 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="join"];
+v19 -> v31;
+
+v31 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="join"];
+v35 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v31 -> v35 [label="indexed_bam"];
+
+v19 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v32 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="join"];
+v19 -> v32;
+
+v32 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="join"];
+v36 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v32 -> v36 [label="indexed_cram"];
+
+v19 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v33 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="join"];
+v19 -> v33;
+
+v33 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="join"];
+v37 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v33 -> v37 [label="indexed_vcf"];
+
+v34 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.empty"];
+v35 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v34 -> v35;
+
+v35 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v36 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v35 -> v36;
+
+v36 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v37 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v36 -> v37;
+
+v37 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v38 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v37 -> v38;
+
+v38 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v39 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v38 -> v39;
+
+v39 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v54 [label="NFCORE_RNAALN:RNAALN:HISAT2_ALIGN"];
+v39 -> v54 [label="meta_files"];
+
+v17 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v40 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v17 -> v40 [label="ch_input_sample"];
+
+v40 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v41 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="unique"];
+v40 -> v41;
+
+v41 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="unique"];
+v110 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v41 -> v110 [label="meta_analysis"];
+
+v42 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v58 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v42 -> v58 [label="ch_versions"];
+
+v43 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.fromPath"];
+v44 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v43 -> v44;
+
+v44 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v47 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v44 -> v47;
+
+v45 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.fromPath"];
+v46 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v45 -> v46;
+
+v46 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v47 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v46 -> v47;
+
+v47 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v61 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v47 -> v61 [label="reference_files"];
+
+v48 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.fromPath"];
+v49 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v48 -> v49;
+
+v49 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v50 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v49 -> v50;
+
+v50 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v54 [label="NFCORE_RNAALN:RNAALN:HISAT2_ALIGN"];
+v50 -> v54 [label="index"];
+
+v51 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.fromPath"];
+v52 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v51 -> v52;
+
+v52 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v53 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v52 -> v53;
+
+v53 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v54 [label="NFCORE_RNAALN:RNAALN:HISAT2_ALIGN"];
+v53 -> v54 [label="splicesites"];
+
+v54 [label="NFCORE_RNAALN:RNAALN:HISAT2_ALIGN"];
+v59 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="subscribe"];
+v54 -> v59 [label="bam"];
+
+v54 [label="NFCORE_RNAALN:RNAALN:HISAT2_ALIGN"];
+v57 [shape=point];
+v54 -> v57;
+
+v54 [label="NFCORE_RNAALN:RNAALN:HISAT2_ALIGN"];
+v56 [shape=point];
+v54 -> v56;
+
+v54 [label="NFCORE_RNAALN:RNAALN:HISAT2_ALIGN"];
+v55 [shape=point];
+v54 -> v55;
+
+v54 [label="NFCORE_RNAALN:RNAALN:HISAT2_ALIGN"];
+v137 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="flatten"];
+v54 -> v137;
+
+v54 [label="NFCORE_RNAALN:RNAALN:HISAT2_ALIGN"];
+v58 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v54 -> v58;
+
+v58 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v107 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v58 -> v107 [label="ch_versions"];
+
+v60 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.empty"];
+v71 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v60 -> v71 [label="ch_versions"];
+
+v61 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v67 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_MERGE"];
+v61 -> v67;
+
+v61 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v67 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_MERGE"];
+v61 -> v67;
+
+v54 [label="NFCORE_RNAALN:RNAALN:HISAT2_ALIGN"];
+v62 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="flatten"];
+v54 -> v62 [label="bam"];
+
+v62 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="flatten"];
+v63 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="buffer"];
+v62 -> v63;
+
+v63 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="buffer"];
+v64 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v63 -> v64;
+
+v64 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v65 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="groupTuple"];
+v64 -> v65;
+
+v65 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="groupTuple"];
+v66 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v65 -> v66;
+
+v66 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v67 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_MERGE"];
+v66 -> v67 [label="ch_bams"];
+
+v67 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_MERGE"];
+v72 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v67 -> v72;
+
+v67 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_MERGE"];
+v70 [shape=point];
+v67 -> v70;
+
+v67 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_MERGE"];
+v69 [shape=point];
+v67 -> v69;
+
+v67 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_MERGE"];
+v68 [shape=point];
+v67 -> v68;
+
+v67 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_MERGE"];
+v71 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v67 -> v71;
+
+v71 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v74 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v71 -> v74 [label="ch_versions"];
+
+v72 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v73 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:BIOBAMBAM_BAMMARKDUPLICATES2"];
+v72 -> v73 [label="ch_markdup"];
+
+v73 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:BIOBAMBAM_BAMMARKDUPLICATES2"];
+v75 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_INDEX"];
+v73 -> v75 [label="markdup_bam"];
+
+v73 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:BIOBAMBAM_BAMMARKDUPLICATES2"];
+v87 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v73 -> v87;
+
+v73 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:BIOBAMBAM_BAMMARKDUPLICATES2"];
+v74 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v73 -> v74;
+
+v74 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v78 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v74 -> v78 [label="ch_versions"];
+
+v75 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_INDEX"];
+v79 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v75 -> v79;
+
+v75 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_INDEX"];
+v77 [shape=point];
+v75 -> v77;
+
+v75 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_INDEX"];
+v76 [shape=point];
+v75 -> v76;
+
+v75 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_INDEX"];
+v78 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v75 -> v78;
+
+v78 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v84 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v78 -> v84 [label="ch_versions"];
+
+v73 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:BIOBAMBAM_BAMMARKDUPLICATES2"];
+v79 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v73 -> v79 [label="markdup_bam"];
+
+v79 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v80 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v79 -> v80;
+
+v80 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v81 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_CONVERT"];
+v80 -> v81 [label="ch_convert"];
+
+v61 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v81 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_CONVERT"];
+v61 -> v81;
+
+v61 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v81 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_CONVERT"];
+v61 -> v81;
+
+v81 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_CONVERT"];
+v83 [shape=point];
+v81 -> v83;
+
+v81 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_CONVERT"];
+v85 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v81 -> v85;
+
+v81 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_CONVERT"];
+v82 [shape=point];
+v81 -> v82;
+
+v81 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_CONVERT"];
+v85 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v81 -> v85;
+
+v81 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_CONVERT"];
+v84 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v81 -> v84;
+
+v84 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v106 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v84 -> v106 [label="ch_versions"];
+
+v85 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v86 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v85 -> v86;
+
+v86 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v109 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v86 -> v109 [label="cram_alignment_index"];
+
+v87 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v88 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:TAR"];
+v87 -> v88;
+
+v88 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:TAR"];
+v90 [shape=point];
+v88 -> v90 [label="metrics"];
+
+v88 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:TAR"];
+v89 [shape=point];
+v88 -> v89;
+
+v91 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.empty"];
+v94 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v91 -> v94;
+
+v66 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v92 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v66 -> v92 [label="ch_bams"];
+
+v92 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v93 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v92 -> v93;
+
+v93 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v94 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v93 -> v94;
+
+v94 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v97 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v94 -> v97;
+
+v67 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_MERGE"];
+v95 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v67 -> v95;
+
+v95 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v96 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v95 -> v96;
+
+v96 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v97 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v96 -> v97;
+
+v97 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v100 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v97 -> v100;
+
+v73 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:BIOBAMBAM_BAMMARKDUPLICATES2"];
+v98 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v73 -> v98 [label="markdup_bam"];
+
+v98 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v99 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v98 -> v99;
+
+v99 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v100 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v99 -> v100;
+
+v100 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v103 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v100 -> v103;
+
+v75 [label="NFCORE_RNAALN:RNAALN:MERG_SORT_DUP_H:SAMTOOLS_INDEX"];
+v101 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v75 -> v101;
+
+v101 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v102 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v101 -> v102;
+
+v102 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v103 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v102 -> v103;
+
+v103 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v104 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v103 -> v104;
+
+v104 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v105 [shape=point];
+v104 -> v105 [label="tmp_files"];
+
+v106 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v107 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v106 -> v107 [label="versions"];
+
+v107 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v123 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v107 -> v123 [label="ch_versions"];
+
+v108 [shape=point,label="",fixedsize=true,width=0.1];
+v109 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v108 -> v109 [label="upRdpc"];
+
+v109 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v110 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v109 -> v110;
+
+v110 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v114 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v110 -> v114;
+
+v47 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v111 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v47 -> v111 [label="reference_files"];
+
+v111 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v112 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="flatten"];
+v111 -> v112;
+
+v112 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="flatten"];
+v113 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v112 -> v113;
+
+v113 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v114 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v113 -> v114;
+
+v114 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v115 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v114 -> v115;
+
+v115 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v116 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v115 -> v116;
+
+v116 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v122 [label="NFCORE_RNAALN:RNAALN:PAYLOAD_ALIGNMENT_H"];
+v116 -> v122;
+
+v117 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.empty"];
+v118 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v117 -> v118;
+
+v14 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v118 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v14 -> v118 [label="versions"];
+
+v118 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v119 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v118 -> v119;
+
+v54 [label="NFCORE_RNAALN:RNAALN:HISAT2_ALIGN"];
+v119 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v54 -> v119;
+
+v119 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v120 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v119 -> v120;
+
+v106 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v120 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v106 -> v120 [label="versions"];
+
+v120 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v121 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collectFile"];
+v120 -> v121;
+
+v121 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collectFile"];
+v122 [label="NFCORE_RNAALN:RNAALN:PAYLOAD_ALIGNMENT_H"];
+v121 -> v122;
+
+v122 [label="NFCORE_RNAALN:RNAALN:PAYLOAD_ALIGNMENT_H"];
+v125 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:songSub"];
+v122 -> v125 [label="payload_files"];
+
+v122 [label="NFCORE_RNAALN:RNAALN:PAYLOAD_ALIGNMENT_H"];
+v123 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v122 -> v123;
+
+v123 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v136 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v123 -> v136 [label="ch_versions"];
+
+v124 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.empty"];
+v127 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v124 -> v127 [label="ch_versions"];
+
+v125 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:songSub"];
+v126 [shape=point];
+v125 -> v126 [label="-"];
+
+v125 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:songSub"];
+v128 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:songMan"];
+v125 -> v128;
+
+v125 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:songSub"];
+v127 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v125 -> v127;
+
+v127 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v130 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v127 -> v130 [label="ch_versions"];
+
+v128 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:songMan"];
+v129 [shape=point];
+v128 -> v129;
+
+v128 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:songMan"];
+v130 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v128 -> v130;
+
+v128 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:songMan"];
+v131 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:scoreUp"];
+v128 -> v131;
+
+v130 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v132 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v130 -> v132 [label="ch_versions"];
+
+v131 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:scoreUp"];
+v133 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:songPub"];
+v131 -> v133;
+
+v131 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:scoreUp"];
+v132 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v131 -> v132;
+
+v132 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v135 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v132 -> v135 [label="ch_versions"];
+
+v133 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:songPub"];
+v134 [shape=point];
+v133 -> v134 [label="analysis_id"];
+
+v133 [label="NFCORE_RNAALN:RNAALN:UPLOAD_ALIGNMENT_H:songPub"];
+v135 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v133 -> v135;
+
+v135 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v136 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v135 -> v136 [label="versions"];
+
+v136 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v143 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v136 -> v143 [label="ch_versions"];
+
+v137 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="flatten"];
+v138 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="buffer"];
+v137 -> v138;
+
+v138 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="buffer"];
+v139 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v138 -> v139;
+
+v139 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v140 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="groupTuple"];
+v139 -> v140;
+
+v140 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="groupTuple"];
+v141 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v140 -> v141;
+
+v141 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v142 [label="NFCORE_RNAALN:RNAALN:NOVEL_SPLICE_MERGE_H"];
+v141 -> v142 [label="ch_h_txts"];
+
+v142 [label="NFCORE_RNAALN:RNAALN:NOVEL_SPLICE_MERGE_H"];
+v144 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="subscribe"];
+v142 -> v144;
+
+v142 [label="NFCORE_RNAALN:RNAALN:NOVEL_SPLICE_MERGE_H"];
+v143 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v142 -> v143;
+
+v143 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v161 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v143 -> v161 [label="ch_versions"];
+
+v142 [label="NFCORE_RNAALN:RNAALN:NOVEL_SPLICE_MERGE_H"];
+v145 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v142 -> v145;
+
+v108 [shape=point,label="",fixedsize=true,width=0.1];
+v145 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v108 -> v145 [label="upRdpc"];
+
+v145 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v146 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v145 -> v146;
+
+v41 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="unique"];
+v146 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v41 -> v146 [label="meta_analysis"];
+
+v146 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v150 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v146 -> v150;
+
+v47 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v147 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v47 -> v147 [label="reference_files"];
+
+v147 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v148 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="flatten"];
+v147 -> v148;
+
+v148 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="flatten"];
+v149 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v148 -> v149;
+
+v149 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collect"];
+v150 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v149 -> v150;
+
+v150 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="combine"];
+v151 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v150 -> v151;
+
+v151 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v152 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v151 -> v152;
+
+v152 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v153 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="subscribe"];
+v152 -> v153;
+
+v154 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.empty"];
+v155 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v154 -> v155;
+
+v14 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v155 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v14 -> v155 [label="versions"];
+
+v155 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v156 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v155 -> v156;
+
+v54 [label="NFCORE_RNAALN:RNAALN:HISAT2_ALIGN"];
+v156 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v54 -> v156;
+
+v156 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v157 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v156 -> v157;
+
+v106 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="map"];
+v157 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v106 -> v157 [label="versions"];
+
+v157 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v158 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collectFile"];
+v157 -> v158;
+
+v158 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="collectFile"];
+v159 [label="NFCORE_RNAALN:RNAALN:PAYLOAD_NOVEL_SPLICE_H"];
+v158 -> v159;
+
+v152 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="branch"];
+v159 [label="NFCORE_RNAALN:RNAALN:PAYLOAD_NOVEL_SPLICE_H"];
+v152 -> v159;
+
+v159 [label="NFCORE_RNAALN:RNAALN:PAYLOAD_NOVEL_SPLICE_H"];
+v162 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="subscribe"];
+v159 -> v162 [label="payload_files"];
+
+v159 [label="NFCORE_RNAALN:RNAALN:PAYLOAD_NOVEL_SPLICE_H"];
+v160 [shape=point];
+v159 -> v160;
+
+v122 [label="NFCORE_RNAALN:RNAALN:PAYLOAD_ALIGNMENT_H"];
+v161 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v122 -> v161;
+
+v161 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v174 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v161 -> v174 [label="ch_versions"];
+
+v163 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.empty"];
+v166 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v163 -> v166 [label="ch_versions"];
+
+v159 [label="NFCORE_RNAALN:RNAALN:PAYLOAD_NOVEL_SPLICE_H"];
+v164 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:songSub"];
+v159 -> v164 [label="payload_files"];
+
+v164 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:songSub"];
+v165 [shape=point];
+v164 -> v165 [label="-"];
+
+v164 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:songSub"];
+v167 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:songMan"];
+v164 -> v167;
+
+v164 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:songSub"];
+v166 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v164 -> v166;
+
+v166 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v169 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v166 -> v169 [label="ch_versions"];
+
+v167 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:songMan"];
+v168 [shape=point];
+v167 -> v168;
+
+v167 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:songMan"];
+v169 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v167 -> v169;
+
+v167 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:songMan"];
+v170 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:scoreUp"];
+v167 -> v170;
+
+v169 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v171 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v169 -> v171 [label="ch_versions"];
+
+v170 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:scoreUp"];
+v172 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:songPub"];
+v170 -> v172;
+
+v170 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:scoreUp"];
+v171 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v170 -> v171;
+
+v171 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v173 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v171 -> v173 [label="ch_versions"];
+
+v172 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:songPub"];
+v176 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="subscribe"];
+v172 -> v176 [label="analysis_id"];
+
+v172 [label="NFCORE_RNAALN:RNAALN:UPLOAD_NOVEL_SPLICE_H:songPub"];
+v173 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v172 -> v173;
+
+v173 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v174 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v173 -> v174 [label="versions"];
+
+v174 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="mix"];
+v175 [shape=point];
+v174 -> v175 [label="versions"];
+
+}
