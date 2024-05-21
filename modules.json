@@ -15,6 +15,16 @@
                         "git_sha": "e1f2b946b457eac191c0fa97ae1d159a15874c6b",
                         "installed_by": ["stage_input"]
                     },
+                    "payload/qcmetrics": {
+                        "branch": "main",
+                        "git_sha": "681bcc1563700f8322be1ba65305a85e169f0909",
+                        "installed_by": ["modules"]
+                    },
+                    "prep/metrics": {
+                        "branch": "main",
+                        "git_sha": "27b616a007c54d0e059d39345b575e7e3801ef72",
+                        "installed_by": ["modules"]
+                    },
                     "prep/sample": {
                         "branch": "main",
                         "git_sha": "dbd4c7b18c86be15f2ca341085d90c0488545d53",
@@ -118,6 +128,11 @@
                     "multiqc": {
                         "branch": "master",
                         "git_sha": "b7ebe95761cd389603f9cc0e0dc384c0f663815a",
+                        "installed_by": ["modules"]
+                    },
+                    "picard/collectrnaseqmetrics": {
+                        "branch": "master",
+                        "git_sha": "20b0918591d4ba20047d7e13e5094bcceba81447",
                         "installed_by": ["modules"]
                     },
                     "samtools/flagstat": {

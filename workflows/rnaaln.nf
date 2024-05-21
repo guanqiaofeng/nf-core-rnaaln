@@ -20,6 +20,10 @@ include { PAYLOAD_NOVEL_SPLICE as PAYLOAD_NOVEL_SPLICE_S } from '../modules/loca
 include { PAYLOAD_NOVEL_SPLICE as PAYLOAD_NOVEL_SPLICE_H } from '../modules/local/payload/novel_splice/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
+include { PICARD_COLLECTRNASEQMETRICS } from '../modules/nf-core/picard/collectrnaseqmetrics/main'
+include { MULTIQC } from '../modules/nf-core/multiqc/main'
+include { PREP_METRICS } from '../modules/icgc-argo-workflows/prep/metrics/main'
+include { PAYLOAD_QCMETRICS } from '../modules/icgc-argo-workflows/payload/qcmetrics/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
