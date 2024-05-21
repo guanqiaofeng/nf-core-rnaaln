@@ -233,6 +233,30 @@ workflow RNAALN {
 
         PICARD_COLLECTRNASEQMETRICS_H.out.metrics.subscribe { println("picard output: ${it}") }
 
+        // MultiQC
+        ch_reports = (
+            Channel.empty()
+            .mix(PICARD_COLLECTRNASEQMETRICS_H.out.metrics)
+            .mix(HISAT2_ALIGN.out.summary)
+            .mix(HISAT2_ALIGN.out.metrix)
+        )
+
+        ch_multiqc = Channel.empty()
+        ch_multiqc = ch_multiqc.mix(ch_reports.collect{meta, report -> report}).ifEmpty([])
+
+        ch_multiqc_config = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
+        ch_multiqc_custom_config   = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
+        ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
+
+        MULTIQC_H (
+        ch_multiqc.collect(),
+        ch_multiqc_config.toList(),
+        ch_multiqc_custom_config.toList(),
+        ch_multiqc_logo.toList()
+        )
+        ch_versions = ch_versions.mix(MULTIQC_H.out.versions)
+
+
     }
 
     // STAR //
@@ -408,6 +432,33 @@ workflow RNAALN {
         ch_versions = ch_versions.mix(PICARD_COLLECTRNASEQMETRICS_S.out.versions)
 
         PICARD_COLLECTRNASEQMETRICS_S.out.metrics.subscribe { println("picard output: ${it}") }
+
+        ch_reports_s = (
+            Channel.empty()
+            .mix(PICARD_COLLECTRNASEQMETRICS_S.out.metrics)
+            .mix(STAR_ALIGN.out.log_final)
+        )
+
+        // Check if STAR_ALIGN.out.read_per_gene_tab exists
+        if (STAR_ALIGN.out.read_per_gene_tab) {
+            ch_reports_s = ch_reports_s.mix(STAR_ALIGN.out.read_per_gene_tab)
+        }
+
+        ch_multiqc_s = Channel.empty()
+        ch_multiqc_s = ch_multiqc_s.mix(ch_reports_s.collect{meta, report -> report}).ifEmpty([])
+
+        ch_multiqc_config = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
+        ch_multiqc_custom_config   = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
+        ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
+
+        MULTIQC_S (
+        ch_multiqc_s.collect(),
+        ch_multiqc_config.toList(),
+        ch_multiqc_custom_config.toList(),
+        ch_multiqc_logo.toList()
+        )
+        ch_versions = ch_versions.mix(MULTIQC_S.out.versions)
+
 
     }
 
