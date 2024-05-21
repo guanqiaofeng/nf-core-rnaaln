@@ -20,8 +20,10 @@ include { PAYLOAD_NOVEL_SPLICE as PAYLOAD_NOVEL_SPLICE_S } from '../modules/loca
 include { PAYLOAD_NOVEL_SPLICE as PAYLOAD_NOVEL_SPLICE_H } from '../modules/local/payload/novel_splice/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
-include { PICARD_COLLECTRNASEQMETRICS } from '../modules/nf-core/picard/collectrnaseqmetrics/main'
-include { MULTIQC } from '../modules/nf-core/multiqc/main'
+include { PICARD_COLLECTRNASEQMETRICS as PICARD_COLLECTRNASEQMETRICS_S } from '../modules/nf-core/picard/collectrnaseqmetrics/main'
+include { PICARD_COLLECTRNASEQMETRICS as PICARD_COLLECTRNASEQMETRICS_H } from '../modules/nf-core/picard/collectrnaseqmetrics/main'
+include { MULTIQC as MULTIQC_S } from '../modules/nf-core/multiqc/main'
+include { MULTIQC as MULTIQC_H } from '../modules/nf-core/multiqc/main'
 include { PREP_METRICS } from '../modules/icgc-argo-workflows/prep/metrics/main'
 include { PAYLOAD_QCMETRICS } from '../modules/icgc-argo-workflows/payload/qcmetrics/main'
 
@@ -68,6 +70,9 @@ workflow RNAALN {
             splicesites
         )
         ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions)
+
+        HISAT2_ALIGN.out.bam.subscribe { println("hisat2 bam output: ${it}") }
+
 
         // MERG in sample level
         MERG_SORT_DUP_H( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
@@ -213,6 +218,20 @@ workflow RNAALN {
         // Upload files - aligment
         UPLOAD_NOVEL_SPLICE_H(PAYLOAD_NOVEL_SPLICE_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_NOVEL_SPLICE_H.out.versions)
+
+        MERG_SORT_DUP_H.out.bam_post_dup.subscribe { println("bam post dup: ${it}") }
+
+
+        // Picard
+        PICARD_COLLECTRNASEQMETRICS_H(
+            MERG_SORT_DUP_H.out.bam_post_dup,
+            Channel.fromPath(params.ref_flat),
+            Channel.fromPath(params.reference_fasta),
+            Channel.fromPath(params.rrna_intervals)
+        )
+        ch_versions = ch_versions.mix(PICARD_COLLECTRNASEQMETRICS_H.out.versions)
+
+        PICARD_COLLECTRNASEQMETRICS_H.out.metrics.subscribe { println("picard output: ${it}") }
 
     }
 
@@ -379,7 +398,16 @@ workflow RNAALN {
         UPLOAD_NOVEL_SPLICE_S(PAYLOAD_NOVEL_SPLICE_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_NOVEL_SPLICE_S.out.versions)
 
-        // Collect QC Metrics
+        // Picard
+        PICARD_COLLECTRNASEQMETRICS_S(
+            MERG_SORT_DUP_S.out.bam_post_dup,
+            Channel.fromPath(params.ref_flat),
+            Channel.fromPath(params.reference_fasta),
+            Channel.fromPath(params.rrna_intervals)
+        )
+        ch_versions = ch_versions.mix(PICARD_COLLECTRNASEQMETRICS_S.out.versions)
+
+        PICARD_COLLECTRNASEQMETRICS_S.out.metrics.subscribe { println("picard output: ${it}") }
 
     }
 

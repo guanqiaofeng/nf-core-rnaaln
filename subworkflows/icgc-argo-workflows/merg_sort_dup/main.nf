@@ -46,7 +46,8 @@ workflow MERG_SORT_DUP {
             numLanes:"${meta.numLanes}",
             experiment:"${meta.experiment}",
             date:"${meta.date}",
-            tool: "${meta.tool}"
+            tool: "${meta.tool}",
+            library_strandedness: "${meta.library_strandedness}"
             ],
             [
             read_group:"${meta.id}",
@@ -71,7 +72,8 @@ workflow MERG_SORT_DUP {
             read_group:"${info.read_group.collect()}",
             data_type:"${info.data_type.collect()}",
             size:"${info.size.collect()}",
-            tool: "${meta.tool}"
+            tool: "${meta.tool}",
+            library_strandedness: "${meta.library_strandedness}"
             ],bam.collect()
         ]
     }.set{ch_bams}
@@ -103,7 +105,8 @@ workflow MERG_SORT_DUP {
                     data_type:"${meta.data_type}",
                     size:"${meta.size}",
                     experiment:"${meta.experiment}",
-                    tool: "${meta.tool}"
+                    tool: "${meta.tool}",
+                    library_strandedness: "${meta.library_strandedness}"
                 ],
                 file
             ]
@@ -125,7 +128,8 @@ workflow MERG_SORT_DUP {
                     data_type:"${meta.data_type}",
                     size:"${meta.size}",
                     experiment:"${meta.experiment}",
-                    tool: "${meta.tool}"
+                    tool: "${meta.tool}",
+                    library_strandedness: "${meta.library_strandedness}"
                 ],
                 file
             ]
@@ -164,7 +168,8 @@ workflow MERG_SORT_DUP {
                 data_type:"${metaA.data_type}",
                 size:"${metaA.size}",
                 experiment:"${metaA.experiment}",
-                tool: "${metaA.tool}"
+                tool: "${metaA.tool}",
+                library_strandedness: "${metaA.library_strandedness}"
             ],
             bam,index
         ]
@@ -196,7 +201,8 @@ workflow MERG_SORT_DUP {
                 data_type:"${metaA.data_type}",
                 size:"${metaA.size}",
                 experiment:"${metaA.experiment}",
-                tool: "${metaA.tool}"
+                tool: "${metaA.tool}",
+                library_strandedness: "${metaA.library_strandedness}"
             ],
             cram,index
         ]
@@ -220,7 +226,8 @@ workflow MERG_SORT_DUP {
                     size:"${meta.size}",
                     experiment:"${meta.experiment}",
                     id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}.aln.cram.duplicates_metrics",
-                    tools:"${meta.tool}"
+                    tools:"${meta.tool}",
+                    library_strandedness: "${meta.library_strandedness}"
                 ],file
             ]
             }
@@ -248,6 +255,7 @@ workflow MERG_SORT_DUP {
 
     emit:
     cram_alignment_index = alignment_index
+    bam_post_dup = markdup_bam
     tmp_files = ch_cleanup
     metrics = metrics
     versions = ch_versions                     // channel: [ versions.yml ]

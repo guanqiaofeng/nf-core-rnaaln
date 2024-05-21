@@ -26,6 +26,7 @@ process PICARD_COLLECTRNASEQMETRICS {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def reference = fasta ? "--REFERENCE_SEQUENCE ${fasta}" : ""
     def rrna = rrna_intervals ? "--RIBOSOMAL_INTERVALS ${rrna_intervals}" : ""
+    def strandedness = meta.strandedness == 'forward' ? '--STRAND_SPECIFICITY FIRST_READ_TRANSCRIPTION_STRAND' : meta.strandedness == 'reverse' ? '--STRAND_SPECIFICITY SECOND_READ_TRANSCRIPTION_STRAND' : '--STRAND_SPECIFICITY NONE'
     def avail_mem = 3072
     if (!task.memory) {
         log.info '[Picard CollectRnaSeqMetrics] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
@@ -39,8 +40,9 @@ process PICARD_COLLECTRNASEQMETRICS {
         $args \\
         $reference \\
         $rrna \\
+        $strandedness \\
         --REF_FLAT $ref_flat \\
-        --INPUT $bam \\
+        --INPUT ${bam[0]} \\
         --OUTPUT ${prefix}.rna_metrics
 
     cat <<-END_VERSIONS > versions.yml
