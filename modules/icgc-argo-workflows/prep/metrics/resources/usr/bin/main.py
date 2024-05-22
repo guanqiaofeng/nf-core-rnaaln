@@ -27,7 +27,7 @@ from glob import glob
 import csv
 
 ga4gh_wgs_qc_metrics = [
- 
+
    'insert_size_std_deviation',
    'mad_autosome_coverage',
    'mean_autosome_coverage',
@@ -39,6 +39,8 @@ ga4gh_wgs_qc_metrics = [
   ]
 
 tool_fieldmap = {
+  'hisat2' : {},
+  'picard_RnaSeqMetrics' : {},
   'fastqc': {},
   'cutadapt': {},
   'samtools_stats': {
@@ -81,7 +83,7 @@ def get_mqc_stats(multiqc, sampleId):
     for f in sorted(glob(multiqc+'/*.txt')):
       for tool_metrics in tool_fieldmap.keys():
         if f.endswith(tool_metrics+'.txt'):
-          with open(f, 'r') as fn: 
+          with open(f, 'r') as fn:
             mqc_stats[tool_metrics] = []
             reader = csv.DictReader(fn, delimiter="\t")
             for row in reader:
@@ -109,7 +111,7 @@ def get_mqc_stats(multiqc, sampleId):
       r2_with_adapters_total = 0
       pairs_processed_total = 0
       pairs_trimmed_total = 0
-      
+
       for rg_metrics in mqc_stats['cutadapt']:
         if not rg_metrics.get('pairs_processed'):
           r_with_adapters_total += float(rg_metrics['r_with_adapters'])
@@ -138,9 +140,9 @@ def get_mqc_stats(multiqc, sampleId):
       sequences_flagged_as_poor_quality = []
       gc_content = []
       qc_status = {}
-      qc_metrics = ['basic_statistics', 'per_base_sequence_quality', 
-                    'per_sequence_quality_scores', 'per_base_sequence_content', 'per_sequence_gc_content', 
-                    'per_base_n_content', 'sequence_length_distribution', 'sequence_duplication_levels', 
+      qc_metrics = ['basic_statistics', 'per_base_sequence_quality',
+                    'per_sequence_quality_scores', 'per_base_sequence_content', 'per_sequence_gc_content',
+                    'per_base_n_content', 'sequence_length_distribution', 'sequence_duplication_levels',
                     'overrepresented_sequences', 'adapter_content']
       for fn in qc_metrics:
         qc_status[fn] = set()
@@ -150,7 +152,7 @@ def get_mqc_stats(multiqc, sampleId):
         gc_content.append(float(rg_metrics["%GC"])*float(rg_metrics['Total Sequences']))
         for fn in qc_metrics:
           qc_status[fn].add(rg_metrics[fn])
-      
+
       mqc_stats['metrics'].update(
         {
           'total_sequences': round(sum(total_sequences)),
@@ -158,9 +160,9 @@ def get_mqc_stats(multiqc, sampleId):
           'percent_gc': round(sum(gc_content) / sum(total_sequences),2)
         }
       )
-      
+
       for fn in qc_metrics:
-        for status in ['fail', 'warning', 'pass']:          
+        for status in ['fail', 'warning', 'pass']:
           if status in qc_status[fn]:
             mqc_stats['metrics'].update(
               {fn: status}
@@ -182,11 +184,13 @@ def main():
     parser.add_argument("-q", "--qc_files", dest="qc_files", required=True, type=str, nargs="+", help="qc files")
 
     args = parser.parse_args()
-    
+
     # get tool_specific & aggregated metrics from multiqc
     mqc_stats = {}
     if args.multiqc:
       mqc_stats = get_mqc_stats(args.multiqc, args.sampleId)
+
+    print(f"{mqc_stats}")
 
     # get tool_specific & aggregated metrics from qc_files when they're not retrieved by multiqc
     for fn in sorted(args.qc_files):
@@ -195,7 +199,7 @@ def main():
         file_type = 'gatk_contamination'
         if file_type in mqc_stats: continue
         mqc_stats[file_type] = []
-        with open(fn, 'r') as f:     
+        with open(fn, 'r') as f:
           reader = csv.DictReader(f, delimiter="\t")
           for row in reader:
             mqc_stats[file_type].append(row)
@@ -218,8 +222,8 @@ def main():
     }
     for k,v in mqc_stats_updated.get('metrics', None).items():
         if not k in ga4gh_wgs_qc_metrics: continue
-        ga4gh_qc_dict['wgs_qc_metrics'].update({k: v}) 
- 
+        ga4gh_qc_dict['wgs_qc_metrics'].update({k: v})
+
     if ga4gh_qc_dict['wgs_qc_metrics']:
       with open("%s.metrics.json" % (args.sampleId), 'w') as f:
         f.write(json.dumps(ga4gh_qc_dict, indent=2))

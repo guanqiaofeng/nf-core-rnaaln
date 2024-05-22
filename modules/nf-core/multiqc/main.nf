@@ -15,6 +15,9 @@ process MULTIQC {
     output:
     path "*multiqc_report.html", emit: report
     path "*_data"              , emit: data
+    path "*_data/*_picard_RnaSeqMetrics.txt", optional: true, emit: picard_multi
+    path "*_data/*_star.txt", optional: true, emit: star_multi
+    path "*_data/*_hisat2.txt", optional: true, emit: hisat2_multi
     path "*_plots"             , optional:true, emit: plots
     path "versions.yml"        , emit: versions
 

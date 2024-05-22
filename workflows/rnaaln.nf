@@ -24,8 +24,10 @@ include { PICARD_COLLECTRNASEQMETRICS as PICARD_COLLECTRNASEQMETRICS_S } from '.
 include { PICARD_COLLECTRNASEQMETRICS as PICARD_COLLECTRNASEQMETRICS_H } from '../modules/nf-core/picard/collectrnaseqmetrics/main'
 include { MULTIQC as MULTIQC_S } from '../modules/nf-core/multiqc/main'
 include { MULTIQC as MULTIQC_H } from '../modules/nf-core/multiqc/main'
-include { PREP_METRICS } from '../modules/icgc-argo-workflows/prep/metrics/main'
+include { PREP_METRICS as PREP_METRICS_S } from '../modules/local/prep/rnametrics/main'
+include { PREP_METRICS as PREP_METRICS_H } from '../modules/local/prep/rnametrics/main'
 include { PAYLOAD_QCMETRICS } from '../modules/icgc-argo-workflows/payload/qcmetrics/main'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -225,7 +227,7 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(PICARD_COLLECTRNASEQMETRICS_H.out.versions)
 
-        PICARD_COLLECTRNASEQMETRICS_H.out.metrics.subscribe { println("Picard metrics - HISAT2: ${it}") }
+        // PICARD_COLLECTRNASEQMETRICS_H.out.metrics.subscribe { println("Picard metrics - HISAT2: ${it}") }
 
         // MultiQC
         ch_reports = (
@@ -250,8 +252,45 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(MULTIQC_H.out.versions)
 
-        MULTIQC_H.out.report.subscribe { println("MultiQC report - HISAT2: ${it}") }
-        MULTIQC_H.out.data.subscribe { println("MultiQC data - HISAT2: ${it}") }
+        // MULTIQC_H.out.report.subscribe { println("MultiQC report - HISAT2: ${it}") }
+        // MULTIQC_H.out.data.subscribe { println("MultiQC data - HISAT2: ${it}") }
+
+        // PICARD_COLLECTRNASEQMETRICS_H.out.metrics (meta, path)
+        // MULTIQC_H.out.picard_multi
+        // MULTIQC_H.out.hisat2_multi
+
+        PICARD_COLLECTRNASEQMETRICS_H.out.metrics.subscribe { println("Picard output: ${it}") }
+        MULTIQC_H.out.picard_multi.subscribe { println("MultiQC picard output: ${it}") }
+        MULTIQC_H.out.hisat2_multi.subscribe { println("MultiQC hisat2 output: ${it}") }
+
+        PICARD_COLLECTRNASEQMETRICS_H.out.metrics
+        .combine(MULTIQC_H.out.picard_multi)
+        .combine(MULTIQC_H.out.hisat2_multi)
+        .map{
+            meta, path, picard, hisat2 ->
+            [
+                [
+                    id:"${meta.study_id}.${meta.patient}.${meta.sample}",
+                    study_id:"${meta.study_id}",
+                    patient:"${meta.patient}",
+                    sex:"${meta.sex}",
+                    sample:"${meta.sample}",
+                    experiment:"${meta.experiment}",
+                    read_group:"${meta.read_group}",
+                    data_type:"${meta.data_type}",
+                    date : "${meta.date}",
+                    read_groups_count: "${meta.numLanes}"
+                ],[picard, hisat2]
+            ]
+        }
+        .set{ch_h_prep_metrics}
+
+        ch_h_prep_metrics.subscribe { println("prep metrics input: ${it}") }
+
+        PREP_METRICS_H(
+            ch_h_prep_metrics,
+            MULTIQC_H.out.data
+        )
     }
 
     // STAR //
@@ -459,6 +498,37 @@ workflow RNAALN {
         MULTIQC_S.out.report.subscribe { println("MultiQC report - STAR: ${it}") }
         MULTIQC_S.out.data.subscribe { println("MultiQC data - STAR: ${it}") }
 
+        // Prepare Metrics
+        PICARD_COLLECTRNASEQMETRICS_S.out.metrics
+        .combine(MULTIQC_S.out.picard_multi)
+        .combine(MULTIQC_S.out.star_multi)
+        .map{
+            meta, path, picard, star ->
+            [
+                [
+                    id:"${meta.study_id}.${meta.patient}.${meta.sample}",
+                    study_id:"${meta.study_id}",
+                    patient:"${meta.patient}",
+                    sex:"${meta.sex}",
+                    sample:"${meta.sample}",
+                    experiment:"${meta.experiment}",
+                    read_group:"${meta.read_group}",
+                    data_type:"${meta.data_type}",
+                    date : "${meta.date}",
+                    read_groups_count: "${meta.numLanes}"
+                ],[picard, star]
+            ]
+        }
+        .set{ch_s_prep_metrics}
+
+        ch_s_prep_metrics.subscribe { println("prep metrics input: ${it}") }
+
+        PREP_METRICS_S(
+            ch_s_prep_metrics,
+            MULTIQC_S.out.data
+        )
+
+        PREP_METRICS_S.out.metrics_json.subscribe { println("prep metrics output: ${it}") }
     }
 
     // MERGE_SORT_DUP
