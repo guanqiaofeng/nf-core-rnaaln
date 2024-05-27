@@ -25,6 +25,31 @@ import argparse
 import json
 import os
 
+qc_metrics = [
+   'CORRECT_STRAND_READS',
+   'PCT_RIBOSOMAL_BASES',
+   'PCT_CODING_BASES',
+   'PCT_UTR_BASES',
+   'PCT_INTRONIC_BASES',
+   'PCT_INTERGENIC_BASES',
+   'PCT_MRNA_BASES',
+   'PCT_USABLE_BASES',
+   'PCT_CORRECT_STRAND_READS',
+   'MEDIAN_CV_COVERAGE',
+   'MEDIAN_5PRIME_TO_3PRIME_BIAS',
+   'paired_total',
+   'unpaired_total',
+   'overall_alignment_rate',
+   'total_reads',
+   'avg_input_read_length',
+   'uniquely_mapped_percent',
+   'avg_mapped_read_length',
+   'num_splices',
+   'num_annotated_splices',
+   'mismatch_rate',
+   'multimapped_percent'
+  ]
+
 def parse_metrics_file(metrics_file):
     with open(metrics_file) as f:
         lines = f.readlines()
@@ -38,10 +63,11 @@ def aggregate_metrics(parsed_metrics):
     for metrics in parsed_metrics:
         for key, value in metrics.items():
             if key not in aggregated:
-                try:
-                    aggregated[key] = float(value)
-                except ValueError:
-                    aggregated[key] = value
+                if key in qc_metrics:
+                    try:
+                        aggregated[key] = float(value)
+                    except ValueError:
+                        aggregated[key] = value
     return aggregated
 
 def parse_metrics_file_by_type(file_path):

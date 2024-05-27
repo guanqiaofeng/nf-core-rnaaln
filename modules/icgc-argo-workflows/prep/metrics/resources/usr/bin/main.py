@@ -22,7 +22,7 @@
 """
 
 import argparse
-import json
+import json11
 from glob import glob
 import csv
 

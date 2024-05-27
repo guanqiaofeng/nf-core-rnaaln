@@ -26,7 +26,9 @@ include { MULTIQC as MULTIQC_S } from '../modules/nf-core/multiqc/main'
 include { MULTIQC as MULTIQC_H } from '../modules/nf-core/multiqc/main'
 include { PREP_METRICS as PREP_METRICS_S } from '../modules/local/prep/rnametrics/main'
 include { PREP_METRICS as PREP_METRICS_H } from '../modules/local/prep/rnametrics/main'
-include { PAYLOAD_QCMETRICS } from '../modules/icgc-argo-workflows/payload/qcmetrics/main'
+include { PAYLOAD_QCMETRICS as  PAYLOAD_QCMETRICS_S} from '../modules/icgc-argo-workflows/payload/qcmetrics/main'
+include { PAYLOAD_QCMETRICS as  PAYLOAD_QCMETRICS_H} from '../modules/icgc-argo-workflows/payload/qcmetrics/main'
+
 
 
 /*
@@ -259,10 +261,11 @@ workflow RNAALN {
         // MULTIQC_H.out.picard_multi
         // MULTIQC_H.out.hisat2_multi
 
-        PICARD_COLLECTRNASEQMETRICS_H.out.metrics.subscribe { println("Picard output: ${it}") }
-        MULTIQC_H.out.picard_multi.subscribe { println("MultiQC picard output: ${it}") }
-        MULTIQC_H.out.hisat2_multi.subscribe { println("MultiQC hisat2 output: ${it}") }
+        // PICARD_COLLECTRNASEQMETRICS_H.out.metrics.subscribe { println("Picard output: ${it}") }
+        // MULTIQC_H.out.picard_multi.subscribe { println("MultiQC picard output: ${it}") }
+        // MULTIQC_H.out.hisat2_multi.subscribe { println("MultiQC hisat2 output: ${it}") }
 
+        // metrics preparation
         PICARD_COLLECTRNASEQMETRICS_H.out.metrics
         .combine(MULTIQC_H.out.picard_multi)
         .combine(MULTIQC_H.out.hisat2_multi)
@@ -285,12 +288,65 @@ workflow RNAALN {
         }
         .set{ch_h_prep_metrics}
 
-        ch_h_prep_metrics.subscribe { println("prep metrics input: ${it}") }
+        // ch_h_prep_metrics.subscribe { println("prep metrics input: ${it}") }
 
         PREP_METRICS_H(
             ch_h_prep_metrics,
             MULTIQC_H.out.data
         )
+
+        // PREP_METRICS_H.out.metrics_json.subscribe { println("prep metrics output: ${it}") }
+
+        ch_h_prep_metrics.subscribe { println("prep metrics: ${it}") }
+        PREP_METRICS_H.out.metrics_json.subscribe { println("prep metrics out json: ${it}") }
+        MULTIQC_H.out.data.subscribe { println("multiQC: ${it}") }
+
+        // Payload generation - qc metrics
+        ch_h_prep_metrics
+        .combine(PREP_METRICS_H.out.metrics_json)
+        .combine(STAGE_INPUT.out.upRdpc)
+        .combine(STAGE_INPUT.out.meta_analysis)
+        .combine(
+            ch_ref.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
+        ).map{
+            meta, qcfiles_to_upload, metaB, multiqc, upRdpc, metaC, meta_analysis, ref ->
+            [
+                [
+                    id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
+                    patient:"${meta.patient}",
+                    sex:"${meta.sex}",
+                    sample:"${meta.sample}",
+                    read_group:"${meta.read_group}",
+                    data_type:"${meta.data_type}",
+                    date : "${meta.date}",
+                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    read_groups_count: "${meta.numLanes}",
+                    study_id : "${meta.study_id}",
+                    date :"${new Date().format("yyyyMMdd")}",
+                    upRdpc : upRdpc
+                ],meta_analysis, qcfiles_to_upload, multiqc
+            ]
+        }.branch{
+            upload : it[0].upRdpc
+        }
+        .set{ch_h_qcmetrics_payload}
+
+
+        ch_h_qcmetrics_payload.subscribe { println("prep payload input: ${it}") }
+
+        PAYLOAD_QCMETRICS_H( // [val(meta) path(json), [path(picard_multiQC), path(hisat2_multiQC)], path(multiQC)]
+            ch_h_qcmetrics_payload,
+            Channel.empty()
+            .mix(STAGE_INPUT.out.versions)
+            .mix(HISAT2_ALIGN.out.versions)
+            .mix(MERG_SORT_DUP_H.out.versions)
+            .mix(PICARD_COLLECTRNASEQMETRICS_H.out.versions)
+            .mix(MULTIQC_H.out.versions)
+            .collectFile(name: 'collated_versions.yml')
+            )
+        ch_versions = ch_versions.mix(PAYLOAD_QCMETRICS_H.out.versions)
+
+        PAYLOAD_QCMETRICS_H.out.payload_files.subscribe { println("Generated Payload: ${it}") }
     }
 
     // STAR //
