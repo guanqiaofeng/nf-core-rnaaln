@@ -28,7 +28,9 @@ include { PREP_METRICS as PREP_METRICS_S } from '../modules/local/prep/rnametric
 include { PREP_METRICS as PREP_METRICS_H } from '../modules/local/prep/rnametrics/main'
 include { PAYLOAD_QCMETRICS as  PAYLOAD_QCMETRICS_S} from '../modules/icgc-argo-workflows/payload/qcmetrics/main'
 include { PAYLOAD_QCMETRICS as  PAYLOAD_QCMETRICS_H} from '../modules/icgc-argo-workflows/payload/qcmetrics/main'
-
+include { SONG_SCORE_UPLOAD as UPLOAD_QC_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
+include { SONG_SCORE_UPLOAD as UPLOAD_QC_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
+// include { TAR } from '../modules/local/tar/main'
 
 
 /*
@@ -164,7 +166,7 @@ workflow RNAALN {
                 experiment:"${meta.experiment}",
                 date:"${meta.date}",
                 read_group:"${info.read_group.collect()}",
-                data_type:"${info.data_type.collect()}",
+                data_type:"${info.data_type.collect()}",  // later check whether data type is correct **
                 size:"${info.size.collect()}",
                 tool: "${meta.tool}",
                 aln: "hisat2"
@@ -282,7 +284,7 @@ workflow RNAALN {
                     read_group:"${meta.read_group}",
                     data_type:"${meta.data_type}",
                     date : "${meta.date}",
-                    read_groups_count: "${meta.numLanes}"
+                    read_groups_count: "${meta.read_groups_count}"
                 ],[picard, hisat2]
             ]
         }
@@ -301,7 +303,12 @@ workflow RNAALN {
         PREP_METRICS_H.out.metrics_json.subscribe { println("prep metrics out json: ${it}") }
         MULTIQC_H.out.data.subscribe { println("multiQC: ${it}") }
 
+        // TAR(ch_h_prep_metrics)
+
+        // TAR.out.stats.subscribe { println("TAR: ${it}") }
+
         // Payload generation - qc metrics
+        // TAR.out.stats
         ch_h_prep_metrics
         .combine(PREP_METRICS_H.out.metrics_json)
         .combine(STAGE_INPUT.out.upRdpc)
@@ -320,7 +327,7 @@ workflow RNAALN {
                     data_type:"${meta.data_type}",
                     date : "${meta.date}",
                     genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
-                    read_groups_count: "${meta.numLanes}",
+                    read_groups_count: "${meta.read_groups_count}",
                     study_id : "${meta.study_id}",
                     date :"${new Date().format("yyyyMMdd")}",
                     upRdpc : upRdpc
@@ -347,6 +354,10 @@ workflow RNAALN {
         ch_versions = ch_versions.mix(PAYLOAD_QCMETRICS_H.out.versions)
 
         PAYLOAD_QCMETRICS_H.out.payload_files.subscribe { println("Generated Payload: ${it}") }
+
+        // upload - qc metrics
+        UPLOAD_QC_H(PAYLOAD_QCMETRICS_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
+        ch_versions = ch_versions.mix(UPLOAD_QC_H.out.versions)
     }
 
     // STAR //
@@ -521,7 +532,7 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(PICARD_COLLECTRNASEQMETRICS_S.out.versions)
 
-        PICARD_COLLECTRNASEQMETRICS_S.out.metrics.subscribe { println("Picard output - STAR: ${it}") }
+        // PICARD_COLLECTRNASEQMETRICS_S.out.metrics.subscribe { println("Picard output - STAR: ${it}") }
 
 
         // MultiQC
@@ -551,8 +562,8 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(MULTIQC_S.out.versions)
 
-        MULTIQC_S.out.report.subscribe { println("MultiQC report - STAR: ${it}") }
-        MULTIQC_S.out.data.subscribe { println("MultiQC data - STAR: ${it}") }
+        // MULTIQC_S.out.report.subscribe { println("MultiQC report - STAR: ${it}") }
+        // MULTIQC_S.out.data.subscribe { println("MultiQC data - STAR: ${it}") }
 
         // Prepare Metrics
         PICARD_COLLECTRNASEQMETRICS_S.out.metrics
@@ -577,7 +588,7 @@ workflow RNAALN {
         }
         .set{ch_s_prep_metrics}
 
-        ch_s_prep_metrics.subscribe { println("prep metrics input: ${it}") }
+        // ch_s_prep_metrics.subscribe { println("prep metrics input: ${it}") }
 
         PREP_METRICS_S(
             ch_s_prep_metrics,
@@ -585,6 +596,59 @@ workflow RNAALN {
         )
 
         PREP_METRICS_S.out.metrics_json.subscribe { println("prep metrics output: ${it}") }
+
+        // Payload generation - qc metrics
+        // TAR.out.stats
+        ch_s_prep_metrics
+        .combine(PREP_METRICS_S.out.metrics_json)
+        .combine(STAGE_INPUT.out.upRdpc)
+        .combine(STAGE_INPUT.out.meta_analysis)
+        .combine(
+            ch_ref.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
+        ).map{
+            meta, qcfiles_to_upload, metaB, multiqc, upRdpc, metaC, meta_analysis, ref ->
+            [
+                [
+                    id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
+                    patient:"${meta.patient}",
+                    sex:"${meta.sex}",
+                    sample:"${meta.sample}",
+                    read_group:"${meta.read_group}",
+                    data_type:"${meta.data_type}",
+                    date : "${meta.date}",
+                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    read_groups_count: "${meta.read_groups_count}",
+                    study_id : "${meta.study_id}",
+                    date :"${new Date().format("yyyyMMdd")}",
+                    upRdpc : upRdpc
+                ],meta_analysis, qcfiles_to_upload, multiqc
+            ]
+        }.branch{
+            upload : it[0].upRdpc
+        }
+        .set{ch_s_qcmetrics_payload}
+
+
+        ch_s_qcmetrics_payload.subscribe { println("prep payload input: ${it}") }
+
+        PAYLOAD_QCMETRICS_S( // [val(meta) path(json), [path(picard_multiQC), path(hisat2_multiQC)], path(multiQC)]
+            ch_s_qcmetrics_payload,
+            Channel.empty()
+            .mix(STAGE_INPUT.out.versions)
+            .mix(STAR_ALIGN.out.versions)
+            .mix(MERG_SORT_DUP_S.out.versions)
+            .mix(PICARD_COLLECTRNASEQMETRICS_S.out.versions)
+            .mix(MULTIQC_S.out.versions)
+            .collectFile(name: 'collated_versions.yml')
+            )
+        ch_versions = ch_versions.mix(PAYLOAD_QCMETRICS_S.out.versions)
+
+        PAYLOAD_QCMETRICS_S.out.payload_files.subscribe { println("Generated Payload: ${it}") }
+
+        // upload - qc metrics
+        UPLOAD_QC_S(PAYLOAD_QCMETRICS_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
+        ch_versions = ch_versions.mix(UPLOAD_QC_S.out.versions)
+
     }
 
     // MERGE_SORT_DUP

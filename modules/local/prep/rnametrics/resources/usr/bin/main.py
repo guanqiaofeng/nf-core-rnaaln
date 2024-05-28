@@ -72,11 +72,11 @@ def aggregate_metrics(parsed_metrics):
 
 def parse_metrics_file_by_type(file_path):
     if 'multiqc_hisat2' in file_path:
-        return 'hisat2', parse_metrics_file(file_path)
+        return 'hisat2_summary', parse_metrics_file(file_path)
     elif 'multiqc_picard_RnaSeqMetrics' in file_path:
-        return 'picard_rna_seq_metrics', parse_metrics_file(file_path)
+        return 'picard_RnaSeqMetrics', parse_metrics_file(file_path)
     elif 'multiqc_star' in file_path:
-        return 'star', parse_metrics_file(file_path)
+        return 'star_log', parse_metrics_file(file_path)
     else:
         raise ValueError(f"Unknown file type for {file_path}")
 
