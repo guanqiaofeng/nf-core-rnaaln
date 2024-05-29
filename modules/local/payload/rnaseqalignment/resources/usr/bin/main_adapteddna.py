@@ -68,11 +68,18 @@ def rename_file(f, payload, rg_count, sample_info, date_str):
     else:
         sys.exit('Error: unknown aligned seq extention: %s' % f)
 
-    new_name = "%s.%s.%s.%s.%s.%s.%s" % (
+    aln_type = ''
+    if 'transcriptAlign' in f:
+        aln_type = 'transcriptAlign'
+    else:
+        aln_type = 'genomeAlign'
+
+    new_name = "%s.%s.%s.%s.%s.%s.%s.%s" % (
         payload['studyId'],
         sample_info[0]['donor']['donorId'],
         sample_info[0]['sampleId'],
         experimental_strategy,
+        aln_type,
         date_str,
         'aln',
         file_ext
