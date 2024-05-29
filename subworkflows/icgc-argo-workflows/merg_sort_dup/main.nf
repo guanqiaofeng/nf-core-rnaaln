@@ -5,6 +5,7 @@
 // TODO nf-core: A subworkflow SHOULD import at least two modules
 
 include { SAMTOOLS_MERGE                        } from '../../../modules/icgc-argo-workflows/samtools/merge/main'
+include { SAMTOOLS_SORT                        } from '../../../modules/icgc-argo-workflows/samtools/sort/main'
 include { BIOBAMBAM_BAMMARKDUPLICATES2          } from '../../../modules/icgc-argo-workflows/biobambam/bammarkduplicates2/main'
 include { SAMTOOLS_INDEX                        } from '../../../modules/icgc-argo-workflows/samtools/index/main'
 include { SAMTOOLS_CONVERT                      } from '../../../modules/icgc-argo-workflows/samtools/convert/main'
@@ -84,12 +85,17 @@ workflow MERG_SORT_DUP {
         ref_org.fasta,
         ref_org.fai
     )
-
     ch_versions = ch_versions.mix(SAMTOOLS_MERGE.out.versions)
+
+    SAMTOOLS_SORT(
+        SAMTOOLS_MERGE.out.bam,
+        ref_org.fasta
+    )
+    ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions)
 
     // Prepare channel for markdup, id updates
     if (params.tools.split(',').contains('markdup')){
-        SAMTOOLS_MERGE.out.bam
+        SAMTOOLS_SORT.out.bam
         .map{
             meta,file ->
             [
@@ -181,7 +187,6 @@ workflow MERG_SORT_DUP {
         ref_org.fasta,
         ref_org.fai
     )
-
     ch_versions = ch_versions.mix(SAMTOOLS_CONVERT.out.versions)
 
     //Prepare output channel [meta, cram, crai]
