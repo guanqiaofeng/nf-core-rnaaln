@@ -20,13 +20,12 @@ process PREP_METRICS {
     task.ext.when == null || task.ext.when
 
     script:
-    def qc_input = qc_files.join(',')
 
     """
     main.py \\
         -m $multiqc \\
         -s $meta.id \\
-        -q $qc_input
+        -q $qc_files
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

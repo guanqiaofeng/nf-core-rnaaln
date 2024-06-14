@@ -299,10 +299,11 @@ workflow RNAALN {
         .set{ch_h_prep_metrics}
 
         // ch_h_prep_metrics.subscribe { println("prep metrics input: ${it}") }
+        ch_h_prep_metrics.subscribe { println("Multiqc_FILES input: ${it}") }
 
         PREP_METRICS_H(
             ch_h_prep_metrics,
-            MULTIQC_H.out.data
+            MULTIQC_H.out.data.collect()
         )
 
         // PREP_METRICS_H.out.metrics_json.subscribe { println("prep metrics output: ${it}") }

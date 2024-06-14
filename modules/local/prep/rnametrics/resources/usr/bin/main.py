@@ -84,14 +84,14 @@ def main():
     parser = argparse.ArgumentParser(description="Process QC metrics")
     parser.add_argument("-s", "--sample_id", required=True, help="Sample ID")
     parser.add_argument("-m", "--metrics_dir", required=True, help="Directory containing the metrics files")
-    parser.add_argument("-q", "--qc_files", required=True, help="Comma-separated list of QC files")
+    parser.add_argument("-q", "--qc_files", dest="qc_files", required=True, type=str, nargs="+", help="qc files")
+
     args = parser.parse_args()
 
-    qc_files = args.qc_files.split(",")
     parsed_metrics = {}
     detailed_metrics = {}
 
-    for qc_file in qc_files:
+    for qc_file in args.qc_files:
         file_path = os.path.join(args.metrics_dir, qc_file)
         metrics_type, metrics = parse_metrics_file_by_type(file_path)
         parsed_metrics[metrics_type] = metrics
