@@ -18,7 +18,7 @@ process CHECKINPUT {
     when:
     task.ext.when == null || task.ext.when
 
-    script:
+    script: 
     """
     case '$workflow_name' in
     'Pre Alignment QC')

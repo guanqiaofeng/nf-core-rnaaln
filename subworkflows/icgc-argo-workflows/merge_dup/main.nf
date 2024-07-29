@@ -5,13 +5,12 @@
 // TODO nf-core: A subworkflow SHOULD import at least two modules
 
 include { SAMTOOLS_MERGE                        } from '../../../modules/icgc-argo-workflows/samtools/merge/main'
-include { SAMTOOLS_SORT                        } from '../../../modules/icgc-argo-workflows/samtools/sort/main'
 include { BIOBAMBAM_BAMMARKDUPLICATES2          } from '../../../modules/icgc-argo-workflows/biobambam/bammarkduplicates2/main'
-include { SAMTOOLS_INDEX                        } from '../../../modules/icgc-argo-workflows/samtools/index/main'
+include { SAMTOOLS_INDEX                        } from '../../../modules/icgc-argo-workflows/samtools/index/main' 
 include { SAMTOOLS_CONVERT                      } from '../../../modules/icgc-argo-workflows/samtools/convert/main'
 include { TAR                                   } from '../../../modules/icgc-argo-workflows/tar/main'
 
-workflow MERG_SORT_DUP {
+workflow MERGE_DUP {
 
     take:
     bam
@@ -22,11 +21,6 @@ workflow MERG_SORT_DUP {
     ch_versions = Channel.empty()
 
     //Categorize reference_files ([meta, .fasta|.fa] [meta, fai]) into two separate channels based on file extension (reg_org.fasta, reg_org.fai)
-    // reference_files.branch{
-    //     fasta : it[1].name.endsWith(".fasta") || it[1].name.endsWith(".fa")
-    //     fai : it[1].name.endsWith(".fai")
-    // }.set{ref_org}
-
     reference_files.branch{
         fasta : it[1].toString().endsWith(".fasta") || it[1].toString().endsWith(".fa")
         fai : it[1].toString().endsWith(".fai")
@@ -47,8 +41,7 @@ workflow MERG_SORT_DUP {
             numLanes:"${meta.numLanes}",
             experiment:"${meta.experiment}",
             date:"${meta.date}",
-            tool: "${meta.tool}",
-            library_strandedness: "${meta.library_strandedness}"
+            tool: "${meta.tool}"
             ],
             [
             read_group:"${meta.id}",
@@ -73,8 +66,7 @@ workflow MERG_SORT_DUP {
             read_group:"${info.read_group.collect()}",
             data_type:"${info.data_type.collect()}",
             size:"${info.size.collect()}",
-            tool: "${meta.tool}",
-            library_strandedness: "${meta.library_strandedness}"
+            tool: "${meta.tool}"
             ],bam.collect()
         ]
     }.set{ch_bams}
@@ -85,17 +77,12 @@ workflow MERG_SORT_DUP {
         ref_org.fasta,
         ref_org.fai
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_MERGE.out.versions)
 
-    SAMTOOLS_SORT(
-        SAMTOOLS_MERGE.out.bam,
-        ref_org.fasta
-    )
-    ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions)
+    ch_versions = ch_versions.mix(SAMTOOLS_MERGE.out.versions)
 
     // Prepare channel for markdup, id updates
     if (params.tools.split(',').contains('markdup')){
-        SAMTOOLS_SORT.out.bam
+        SAMTOOLS_MERGE.out.bam
         .map{
             meta,file ->
             [
@@ -111,8 +98,7 @@ workflow MERG_SORT_DUP {
                     data_type:"${meta.data_type}",
                     size:"${meta.size}",
                     experiment:"${meta.experiment}",
-                    tool: "${meta.tool}",
-                    library_strandedness: "${meta.library_strandedness}"
+                    tool: "${meta.tool}"
                 ],
                 file
             ]
@@ -134,8 +120,7 @@ workflow MERG_SORT_DUP {
                     data_type:"${meta.data_type}",
                     size:"${meta.size}",
                     experiment:"${meta.experiment}",
-                    tool: "${meta.tool}",
-                    library_strandedness: "${meta.library_strandedness}"
+                    tool: "${meta.tool}"
                 ],
                 file
             ]
@@ -153,7 +138,7 @@ workflow MERG_SORT_DUP {
         ch_markdup.set{markdup_bam}//meta,bam
     }
 
-    //Index Csort.Markdup.Bam
+    //Index Csort.Markdup.Bam 
     SAMTOOLS_INDEX(markdup_bam)
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
 
@@ -174,8 +159,7 @@ workflow MERG_SORT_DUP {
                 data_type:"${metaA.data_type}",
                 size:"${metaA.size}",
                 experiment:"${metaA.experiment}",
-                tool: "${metaA.tool}",
-                library_strandedness: "${metaA.library_strandedness}"
+                tool: "${metaA.tool}"
             ],
             bam,index
         ]
@@ -187,6 +171,7 @@ workflow MERG_SORT_DUP {
         ref_org.fasta,
         ref_org.fai
     )
+
     ch_versions = ch_versions.mix(SAMTOOLS_CONVERT.out.versions)
 
     //Prepare output channel [meta, cram, crai]
@@ -206,8 +191,7 @@ workflow MERG_SORT_DUP {
                 data_type:"${metaA.data_type}",
                 size:"${metaA.size}",
                 experiment:"${metaA.experiment}",
-                tool: "${metaA.tool}",
-                library_strandedness: "${metaA.library_strandedness}"
+                tool: "${metaA.tool}"
             ],
             cram,index
         ]
@@ -217,9 +201,9 @@ workflow MERG_SORT_DUP {
     if (params.tools.split(',').contains('markdup')){
         TAR(
             BIOBAMBAM_BAMMARKDUPLICATES2.out.metrics
-            .map{ meta,file->
+            .map{ meta,file-> 
             [
-                [
+                [   
                     study_id:"${meta.study_id}",
                     patient:"${meta.patient}",
                     sex:"${meta.sex}",
@@ -231,8 +215,7 @@ workflow MERG_SORT_DUP {
                     size:"${meta.size}",
                     experiment:"${meta.experiment}",
                     id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}.aln.cram.duplicates_metrics",
-                    tools:"${meta.tool}",
-                    library_strandedness: "${meta.library_strandedness}"
+                    tools:"${meta.tool}"
                 ],file
             ]
             }
@@ -253,14 +236,13 @@ workflow MERG_SORT_DUP {
         .collect()
         .set{ch_cleanup}
 
-        Channel.empty().set{metrics}
+        Channel.empty().set{metrics}  
     }
 
     ch_versions= ch_versions.map{ file -> file.moveTo("${file.getParent()}/.${file.getName()}")}
-
+    
     emit:
     cram_alignment_index = alignment_index
-    bam_post_dup = markdup_bam
     tmp_files = ch_cleanup
     metrics = metrics
     versions = ch_versions                     // channel: [ versions.yml ]

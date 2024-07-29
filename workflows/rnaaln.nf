@@ -8,9 +8,9 @@ include { STAGE_INPUT } from '../subworkflows/icgc-argo-workflows/stage_input/ma
 include { SONG_SCORE_DOWNLOAD } from '../subworkflows/icgc-argo-workflows/song_score_download/main'
 include { HISAT2_ALIGN } from '../modules/local/hisat2/align/main'
 include { STAR_ALIGN } from '../modules/local/star/align/main'
-include { MERG_SORT_DUP as MERG_SORT_DUP_S } from '../subworkflows/icgc-argo-workflows/merg_sort_dup/main'
-include { MERG_SORT_DUP as MERG_SORT_DUP_ST } from '../subworkflows/icgc-argo-workflows/merg_sort_dup/main'
-include { MERG_SORT_DUP as MERG_SORT_DUP_H } from '../subworkflows/icgc-argo-workflows/merg_sort_dup/main'
+include { MERGE_DUP as MERG_DUP_S } from '../subworkflows/icgc-argo-workflows/merge_dup/main'
+include { MERGE_DUP as MERG_DUP_ST } from '../subworkflows/icgc-argo-workflows/merge_dup/main'
+include { MERGE_DUP as MERG_DUP_H } from '../subworkflows/icgc-argo-workflows/merge_dup/main'
 include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_S } from '../modules/local/payload/rnaseqalignment/main'
 include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_ST } from '../modules/local/payload/rnaseqalignment/main'
 include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_H } from '../modules/local/payload/rnaseqalignment/main'
@@ -86,14 +86,14 @@ workflow RNAALN {
         ch_versions = ch_versions.mix(HISAT2_ALIGN.out.versions)
 
         // MERG in sample level
-        MERG_SORT_DUP_H( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
+        MERG_DUP_H( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
             HISAT2_ALIGN.out.bam,
             ch_ref
         )
-        ch_versions = ch_versions.mix(MERG_SORT_DUP_H.out.versions)
+        ch_versions = ch_versions.mix(MERG_DUP_H.out.versions)
 
         // Combine channels to determine upload status and payload creation
-        MERG_SORT_DUP_H.out.cram_alignment_index
+        MERG_DUP_H.out.cram_alignment_index
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
         .combine(
@@ -127,7 +127,7 @@ workflow RNAALN {
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
             .mix(HISAT2_ALIGN.out.versions)
-            .mix(MERG_SORT_DUP_H.out.versions)
+            .mix(MERG_DUP_H.out.versions)
             .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
@@ -230,9 +230,10 @@ workflow RNAALN {
         UPLOAD_NOVEL_SPLICE_H(PAYLOAD_NOVEL_SPLICE_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_NOVEL_SPLICE_H.out.versions)
 
+/*
         // Picard
         PICARD_COLLECTRNASEQMETRICS_H(
-            MERG_SORT_DUP_H.out.bam_post_dup,
+            MERG_DUP_H.out.bam_post_dup,
             Channel.fromPath(params.ref_flat),
             Channel.fromPath(params.reference_fasta),
             Channel.fromPath(params.rrna_intervals)
@@ -355,7 +356,7 @@ workflow RNAALN {
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
             .mix(HISAT2_ALIGN.out.versions)
-            .mix(MERG_SORT_DUP_H.out.versions)
+            .mix(MERG_DUP_H.out.versions)
             .mix(PICARD_COLLECTRNASEQMETRICS_H.out.versions)
             .mix(MULTIQC_H.out.versions)
             .collectFile(name: 'collated_versions.yml')
@@ -388,14 +389,14 @@ workflow RNAALN {
         ch_versions = ch_versions.mix(STAR_ALIGN.out.versions)
 
         // MERG in sample level - alignment genome
-        MERG_SORT_DUP_S( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
+        MERG_DUP_S( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
             STAR_ALIGN.out.bam,
             ch_ref
         )
-        ch_versions = ch_versions.mix(MERG_SORT_DUP_S.out.versions)
+        ch_versions = ch_versions.mix(MERG_DUP_S.out.versions)
 
         // Combine channels to determine upload status and payload creation
-        MERG_SORT_DUP_S.out.cram_alignment_index
+        MERG_DUP_S.out.cram_alignment_index
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
         .combine(
@@ -429,7 +430,7 @@ workflow RNAALN {
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
             .mix(STAR_ALIGN.out.versions)
-            .mix(MERG_SORT_DUP_S.out.versions)
+            .mix(MERG_DUP_S.out.versions)
             .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_S.out.versions)
@@ -440,14 +441,14 @@ workflow RNAALN {
         // UPLOAD_ALIGNMENT_S.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
 
         // MERG in sample level - alignment transcriptome
-        MERG_SORT_DUP_ST( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
+        MERG_DUP_ST( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
             STAR_ALIGN.out.bam_transcript,
             ch_ref_trans
         )
-        ch_versions = ch_versions.mix(MERG_SORT_DUP_ST.out.versions)
+        ch_versions = ch_versions.mix(MERG_DUP_ST.out.versions)
 
         // Combine channels to determine upload status and payload creation - alignment transcriptome
-        MERG_SORT_DUP_ST.out.cram_alignment_index
+        MERG_DUP_ST.out.cram_alignment_index
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
         .combine(
@@ -481,7 +482,7 @@ workflow RNAALN {
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
             .mix(STAR_ALIGN.out.versions)
-            .mix(MERG_SORT_DUP_ST.out.versions)
+            .mix(MERG_DUP_ST.out.versions)
             .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_ST.out.versions)
@@ -587,7 +588,7 @@ workflow RNAALN {
 
         // // Picard
         // PICARD_COLLECTRNASEQMETRICS_S(
-        //     MERG_SORT_DUP_S.out.bam_post_dup,
+        //     MERG_DUP_S.out.bam_post_dup,
         //     Channel.fromPath(params.ref_flat),
         //     Channel.fromPath(params.reference_fasta),
         //     Channel.fromPath(params.rrna_intervals)
@@ -698,7 +699,7 @@ workflow RNAALN {
         //     Channel.empty()
         //     .mix(STAGE_INPUT.out.versions)
         //     .mix(STAR_ALIGN.out.versions)
-        //     .mix(MERG_SORT_DUP_S.out.versions)
+        //     .mix(MERG_DUP_S.out.versions)
         //     .mix(PICARD_COLLECTRNASEQMETRICS_S.out.versions)
         //     .mix(MULTIQC_S.out.versions)
         //     .collectFile(name: 'collated_versions.yml')
@@ -711,9 +712,12 @@ workflow RNAALN {
         // UPLOAD_QC_S(PAYLOAD_QCMETRICS_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         // ch_versions = ch_versions.mix(UPLOAD_QC_S.out.versions)
 
+*/
     }
 
     // MERGE_SORT_DUP
+
+
 
 
     //Markduplicate

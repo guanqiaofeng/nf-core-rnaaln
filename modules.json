@@ -8,11 +8,11 @@
                     "biobambam/bammarkduplicates2": {
                         "branch": "main",
                         "git_sha": "8909b3114d2360514c3b3514f5c5f66f7b506f8e",
-                        "installed_by": ["merg_sort_dup"]
+                        "installed_by": ["merge_dup"]
                     },
                     "checkinput": {
                         "branch": "main",
-                        "git_sha": "e1f2b946b457eac191c0fa97ae1d159a15874c6b",
+                        "git_sha": "19d2393fd88fca055be66cbd375c0147d43d9b7f",
                         "installed_by": ["stage_input"]
                     },
                     "payload/qcmetrics": {
@@ -27,23 +27,23 @@
                     },
                     "prep/sample": {
                         "branch": "main",
-                        "git_sha": "dbd4c7b18c86be15f2ca341085d90c0488545d53",
+                        "git_sha": "19d2393fd88fca055be66cbd375c0147d43d9b7f",
                         "installed_by": ["stage_input"]
                     },
                     "samtools/convert": {
                         "branch": "main",
                         "git_sha": "8909b3114d2360514c3b3514f5c5f66f7b506f8e",
-                        "installed_by": ["merg_sort_dup"]
+                        "installed_by": ["merge_dup", "modules"]
                     },
                     "samtools/index": {
                         "branch": "main",
                         "git_sha": "e1f2b946b457eac191c0fa97ae1d159a15874c6b",
-                        "installed_by": ["merg_sort_dup", "stage_input"]
+                        "installed_by": ["merge_dup", "stage_input"]
                     },
                     "samtools/merge": {
                         "branch": "main",
                         "git_sha": "8909b3114d2360514c3b3514f5c5f66f7b506f8e",
-                        "installed_by": ["merg_sort_dup"]
+                        "installed_by": ["merge_dup", "modules"]
                     },
                     "score/download": {
                         "branch": "main",
@@ -83,15 +83,15 @@
                     "tar": {
                         "branch": "main",
                         "git_sha": "8909b3114d2360514c3b3514f5c5f66f7b506f8e",
-                        "installed_by": ["merg_sort_dup"]
+                        "installed_by": ["merge_dup"]
                     }
                 }
             },
             "subworkflows": {
                 "icgc-argo-workflows": {
-                    "merg_sort_dup": {
+                    "merge_dup": {
                         "branch": "main",
-                        "git_sha": "8909b3114d2360514c3b3514f5c5f66f7b506f8e",
+                        "git_sha": "faa9ed09e9fc7eff2a441fbb31c4991df3fa87b5",
                         "installed_by": ["subworkflows"]
                     },
                     "song_score_download": {
@@ -106,7 +106,7 @@
                     },
                     "stage_input": {
                         "branch": "main",
-                        "git_sha": "e9dfe346ae3334973f406be3051a1091cad1dca6",
+                        "git_sha": "19d2393fd88fca055be66cbd375c0147d43d9b7f",
                         "installed_by": ["subworkflows"]
                     }
                 }
@@ -148,7 +148,7 @@
                     "samtools/index": {
                         "branch": "master",
                         "git_sha": "f4596fe0bdc096cf53ec4497e83defdb3a94ff62",
-                        "installed_by": ["bam_sort_stats_samtools"]
+                        "installed_by": ["modules"]
                     },
                     "samtools/sort": {
                         "branch": "master",

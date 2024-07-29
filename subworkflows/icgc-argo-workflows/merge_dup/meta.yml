@@ -1,13 +1,12 @@
-name: merg_sort_dup
-description: Merge bam files, sort it, and mark duplicates
+name: merge_dup
+description: Merge bam files, and mark duplicates
 keywords:
-  - sort
   - merge
   - mark duplicates
 components:
   - samtools/merge
-  - samtools/sort
   - samtools/index
+  - samtools/convert
   - biobambam/bammarkduplicates2
   - tar
 input:
@@ -18,11 +17,11 @@ input:
         e.g. [ id:'test', single_end:false ]
   - bam:
       type: file
-      description: BAM/CRAM/SAM file
+      description: sorted BAM/CRAM/SAM file
       pattern: "*.{bam,cram,sam}"
   - reference_files:
       type: file
-      description: genome reference files
+      description: genome/transcriptome reference files
 output:
   - meta:
       type: map

@@ -136,15 +136,12 @@ class RowChecker:
             "fastq_2" : row[self._fastq_2_col] if row.get(self._fastq_2_col) else "NO_FILE",
             "single_end" : row[self._single_end_col].lower(),
             "read_group_count" : row[self._read_group_count_col],
-            "experiment" : row[self._experiment_col] if row.get(self._experiment_col) else "WGS",
+            "experiment" : row[self._experiment_col] if row.get(self._experiment_col) else "RNA-Seq",
             "analysis_json" : row[self._analysis_json_col] if row.get(self._analysis_json_col) else None,
-            "sequencing_center" : row[self._sequencing_center_col] if row.get(self._sequencing_center_col) else None,
-            "library_strandedness": row[self._library_strandedness_col] if row.get(self._library_strandedness_col) else None,
-            "platform": row[self._platform_col] if row.get(self._platform_col) else None,
-            "sequencing_date": row[self._sequencing_date_col] if row.get(self._sequencing_date_col) else None
+            "library_strandedness": row[self._library_strandedness_col]
             }
 
-        # Transform 'library_strandedness' based on its value after dictionary creation
+        # Transform 'library_strandedness' based on its value after dictionary creation: 1.FIRST_READ_SENSE_STRAND->forward; 2.FIRST_READ_ANTISENSE_STRAND->reverse; 3.UNSTRANDED->UNSTRANDED
         if tmp_dict['library_strandedness'] == "FIRST_READ_SENSE_STRAND":
             tmp_dict['library_strandedness'] = "forward"
         elif tmp_dict['library_strandedness'] == "FIRST_READ_ANTISENSE_STRAND":
@@ -315,6 +312,8 @@ class RowChecker:
         """Assert that expected strandedness is correct"""
         if len(row[self._library_strandedness_col]) <= 0:
             raise AssertionError("'library_strandedness' input in required")
+        if row[self._library_strandedness_col] !="FIRST_READ_SENSE_STRAND" and row[self._library_strandedness_col] !="FIRST_READ_ANTISENSE_STRAND" and row[self._library_strandedness_col] !="UNSTRANDED":
+            raise AssertionError("library_strandedness should be one of the following values : FIRST_READ_SENSE_STRAND,FIRST_READ_ANTISENSE_STRAND,UNSTRANDED")
 
     def _validate_sequencing_date_col(self, row):
         """Assert that expected sequencing_date is correct."""

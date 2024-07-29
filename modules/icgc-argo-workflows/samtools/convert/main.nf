@@ -26,10 +26,6 @@ process SAMTOOLS_CONVERT {
     def args = task.ext.args  ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def output_extension = input.getExtension() == "bam" ? "cram" : "bam"
-    def prefix_extra = ''
-    if (fasta.toString().contains("transcript")) {
-        prefix_extra = '.transcriptAlign'
-    }
 
     """
     samtools view \\
@@ -37,9 +33,9 @@ process SAMTOOLS_CONVERT {
         --reference ${fasta} \\
         $args \\
         $input \\
-        -o ${prefix}${prefix_extra}.${output_extension}
+        -o ${prefix}.${output_extension}
 
-    samtools index -@${task.cpus} ${prefix}${prefix_extra}.${output_extension}
+    samtools index -@${task.cpus} ${prefix}.${output_extension}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
