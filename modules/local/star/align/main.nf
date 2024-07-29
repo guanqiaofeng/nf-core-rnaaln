@@ -20,7 +20,7 @@ process STAR_ALIGN {
 
     tuple val(meta), path('*.star_Aligned.bam')      , optional:true, emit: bam
     tuple val(meta), path('*sortedByCoord.out.bam')  , optional:true, emit: bam_sorted
-    tuple val(meta), path('*toTranscriptome.out.bam'), optional:true, emit: bam_transcript
+    tuple val(meta), path('*toTranscriptome.sorted.out.bam'), optional:true, emit: bam_transcript
     tuple val(meta), path('*Aligned.unsort.out.bam') , optional:true, emit: bam_unsorted
     tuple val(meta), path('*fastq.gz')               , optional:true, emit: fastq
     tuple val(meta), path('*.tab')                   , optional:true, emit: tab
@@ -82,6 +82,8 @@ process STAR_ALIGN {
     mv ${prefix}.Aligned.out.bam ${prefix}.Aligned.unsort.out.bam
 
     samtools reheader -P -c \'sed -e "s/^@RG.*/${meta.read_group.replaceAll(/'/,'')}/"\' ${prefix}.Aligned.sortedByCoord.out.bam > ${prefix}.star_Aligned.bam
+
+    samtools sort -o ${prefix}.Aligned.toTranscriptome.sorted.out.bam ${prefix}.Aligned.toTranscriptome.out.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

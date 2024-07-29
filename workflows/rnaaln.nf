@@ -94,6 +94,8 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(MERG_DUP_H.out.versions)
 
+        MERG_DUP_H.out.cram_alignment_index.map { meta, cram, crai -> [meta, cram] }.subscribe{ println("MERGE dup no crai: ${it}") }
+
         // Combine channels to determine upload status and payload creation
         MERG_DUP_H.out.cram_alignment_index
         .combine(STAGE_INPUT.out.upRdpc)
@@ -240,6 +242,12 @@ workflow RNAALN {
             Channel.fromPath(params.reference_fasta),
             Channel.fromPath(params.rrna_intervals)
         )
+        // PICARD_COLLECTRNASEQMETRICS_H(
+        //     MERG_DUP_H.out.cram_alignment_index.map { meta, cram, crai -> [meta, cram] },
+        //     Channel.fromPath(params.ref_flat),
+        //     Channel.fromPath(params.reference_fasta),
+        //     Channel.fromPath(params.rrna_intervals)
+        // )
         ch_versions = ch_versions.mix(PICARD_COLLECTRNASEQMETRICS_H.out.versions)
 
         // PICARD_COLLECTRNASEQMETRICS_H.out.metrics.subscribe { println("Picard metrics - HISAT2: ${it}") }
@@ -313,14 +321,37 @@ workflow RNAALN {
         ch_h_prep_metrics.subscribe { println("prep metrics: ${it}") }
         PREP_METRICS_H.out.metrics_json.subscribe { println("prep metrics out json: ${it}") }
         MULTIQC_H.out.data.subscribe { println("multiQC: ${it}") }
-/*
+
         // TAR(ch_h_prep_metrics)
 
         // TAR.out.stats.subscribe { println("TAR: ${it}") }
 
+        PICARD_COLLECTRNASEQMETRICS_H.out.metrics
+        .combine(MULTIQC_H.out.picard_multi)
+        .combine(MULTIQC_H.out.hisat2_multi)
+        .map{
+            meta, path, picard, hisat2 ->
+            [
+                [
+                    id:"${meta.study_id}.${meta.patient}.${meta.sample}",
+                    study_id:"${meta.study_id}",
+                    patient:"${meta.patient}",
+                    sex:"${meta.sex}",
+                    sample:"${meta.sample}",
+                    experiment:"${meta.experiment}",
+                    read_group:"${meta.read_group}",
+                    data_type:"${meta.data_type}",
+                    date : "${meta.date}",
+                    read_groups_count: "${meta.read_groups_count}"
+                ],[picard, hisat2]
+            ]
+        }
+        .set{ch_h_prep_metrics_files}
+
+
         // Payload generation - qc metrics
         // TAR.out.stats
-        ch_h_prep_metrics
+        ch_h_prep_metrics_files
         .combine(PREP_METRICS_H.out.metrics_json)
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
@@ -713,9 +744,8 @@ workflow RNAALN {
         // UPLOAD_QC_S(PAYLOAD_QCMETRICS_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         // ch_versions = ch_versions.mix(UPLOAD_QC_S.out.versions)
 
-*/
-    }
 
+    }
     // MERGE_SORT_DUP
 
 

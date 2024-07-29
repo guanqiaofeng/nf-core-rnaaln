@@ -141,14 +141,16 @@ def get_files_info(file_to_upload, date_str, analysis_dict, process_indicator, m
         file_info['info'].update({'description': 'Picard tool to collect metrics describing the distribution of the bases within the transcripts.'})
 
     elif re.match(r'.+?hisat2.', file_to_upload): # to be more specific in the future to match other matching styles
-        file_type = 'hisat2_summary'
+        # file_type = 'hisat2_summary'
+        file_type = 'hisat2'
         file_info.update({'dataType': 'Aligned Reads QC'})
         file_info['info']['data_subtypes'] = ['Library Quality', 'Read Characteristics']
         file_info['info'].update({'analysis_tools': ['Hisat2:summary']})
         file_info['info'].update({'description': 'Hisat2 alignment summary file to collect metrics describing mapping rates.'})
 
     elif re.match(r'.+?star.', file_to_upload): # to be more specific in the future to match other matching styles
-        file_type = 'star_log'
+        # file_type = 'star_log'
+        file_type = 'star'
         file_info.update({'dataType': 'Aligned Reads QC'})
         file_info['info']['data_subtypes'] = ['Library Quality', 'Read Characteristics']
         file_info['info'].update({'analysis_tools': ['STAR:log']})
@@ -159,17 +161,17 @@ def get_files_info(file_to_upload, date_str, analysis_dict, process_indicator, m
         sys.exit('Error: unknown QC metrics file: %s' % file_to_upload)
 
     # retrieve qc metrics from multiqc_data
-    # metric_info = multiqc.get(file_type, [])
-    # metric_info_updated = []
-    # for metric_item in metric_info:
-    #   metric_info_updated.append(metric_item)
-    # file_info['info'].update({'metrics': metric_info_updated})
-
-    metric_info = multiqc.get(file_type, {})
-    metric_info_updated = {}
-    for key, value in metric_info.items():
-        metric_info_updated[key] = value
+    metric_info = multiqc.get(file_type, [])
+    metric_info_updated = []
+    for metric_item in metric_info:
+        metric_info_updated.append(metric_item)
     file_info['info'].update({'metrics': metric_info_updated})
+
+    # metric_info = multiqc.get(file_type, {})
+    # metric_info_updated = {}
+    # for key, value in metric_info.items():
+    #     metric_info_updated[key] = value
+    # file_info['info'].update({'metrics': metric_info_updated})
 
     # file naming patterns:
     #   pattern:  <argo_study_id>.<argo_donor_id>.<argo_sample_id>.<experiment_strategy>.<date>.<process_indicator>.<file_type>.<file_ext>
