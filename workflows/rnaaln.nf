@@ -27,8 +27,10 @@ include { PICARD_COLLECTRNASEQMETRICS as PICARD_COLLECTRNASEQMETRICS_S } from '.
 include { PICARD_COLLECTRNASEQMETRICS as PICARD_COLLECTRNASEQMETRICS_H } from '../modules/nf-core/picard/collectrnaseqmetrics/main'
 include { MULTIQC as MULTIQC_S } from '../modules/nf-core/multiqc/main'
 include { MULTIQC as MULTIQC_H } from '../modules/nf-core/multiqc/main'
-include { PREP_METRICS as PREP_METRICS_S } from '../modules/local/prep/rnametrics/main'
-include { PREP_METRICS as PREP_METRICS_H } from '../modules/local/prep/rnametrics/main'
+// include { PREP_METRICS as PREP_METRICS_S } from '../modules/local/prep/rnametrics/main'
+// include { PREP_METRICS as PREP_METRICS_H } from '../modules/local/prep/rnametrics/main'
+include { PREP_METRICS as PREP_METRICS_S } from '../modules/icgc-argo-workflows/prep/metrics/main'
+include { PREP_METRICS as PREP_METRICS_H } from '../modules/icgc-argo-workflows/prep/metrics/main'
 include { PAYLOAD_QCMETRICS as  PAYLOAD_QCMETRICS_S} from '../modules/icgc-argo-workflows/payload/qcmetrics/main'
 include { PAYLOAD_QCMETRICS as  PAYLOAD_QCMETRICS_H} from '../modules/icgc-argo-workflows/payload/qcmetrics/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_QC_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
@@ -230,7 +232,7 @@ workflow RNAALN {
         UPLOAD_NOVEL_SPLICE_H(PAYLOAD_NOVEL_SPLICE_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_NOVEL_SPLICE_H.out.versions)
 
-/*
+
         // Picard
         PICARD_COLLECTRNASEQMETRICS_H(
             MERG_DUP_H.out.bam_post_dup,
@@ -278,10 +280,9 @@ workflow RNAALN {
 
         // metrics preparation
         PICARD_COLLECTRNASEQMETRICS_H.out.metrics
-        .combine(MULTIQC_H.out.picard_multi)
-        .combine(MULTIQC_H.out.hisat2_multi)
+        .combine(MULTIQC_H.out.data)
         .map{
-            meta, path, picard, hisat2 ->
+            meta, path, multiqc_dic ->
             [
                 [
                     id:"${meta.study_id}.${meta.patient}.${meta.sample}",
@@ -294,7 +295,7 @@ workflow RNAALN {
                     data_type:"${meta.data_type}",
                     date : "${meta.date}",
                     read_groups_count: "${meta.read_groups_count}"
-                ],[picard, hisat2]
+                ],multiqc_dic
             ]
         }
         .set{ch_h_prep_metrics}
@@ -304,7 +305,7 @@ workflow RNAALN {
 
         PREP_METRICS_H(
             ch_h_prep_metrics,
-            MULTIQC_H.out.data.collect()
+            []
         )
 
         // PREP_METRICS_H.out.metrics_json.subscribe { println("prep metrics output: ${it}") }
@@ -312,7 +313,7 @@ workflow RNAALN {
         ch_h_prep_metrics.subscribe { println("prep metrics: ${it}") }
         PREP_METRICS_H.out.metrics_json.subscribe { println("prep metrics out json: ${it}") }
         MULTIQC_H.out.data.subscribe { println("multiQC: ${it}") }
-
+/*
         // TAR(ch_h_prep_metrics)
 
         // TAR.out.stats.subscribe { println("TAR: ${it}") }

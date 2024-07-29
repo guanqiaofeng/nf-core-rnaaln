@@ -22,7 +22,7 @@
                     },
                     "prep/metrics": {
                         "branch": "main",
-                        "git_sha": "27b616a007c54d0e059d39345b575e7e3801ef72",
+                        "git_sha": "c041bcd0e203622a9ebebd720897d162a9ba95d7",
                         "installed_by": ["modules"]
                     },
                     "prep/sample": {

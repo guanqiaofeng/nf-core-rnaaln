@@ -6,7 +6,7 @@
 
 include { SAMTOOLS_MERGE                        } from '../../../modules/icgc-argo-workflows/samtools/merge/main'
 include { BIOBAMBAM_BAMMARKDUPLICATES2          } from '../../../modules/icgc-argo-workflows/biobambam/bammarkduplicates2/main'
-include { SAMTOOLS_INDEX                        } from '../../../modules/icgc-argo-workflows/samtools/index/main' 
+include { SAMTOOLS_INDEX                        } from '../../../modules/icgc-argo-workflows/samtools/index/main'
 include { SAMTOOLS_CONVERT                      } from '../../../modules/icgc-argo-workflows/samtools/convert/main'
 include { TAR                                   } from '../../../modules/icgc-argo-workflows/tar/main'
 
@@ -138,7 +138,7 @@ workflow MERGE_DUP {
         ch_markdup.set{markdup_bam}//meta,bam
     }
 
-    //Index Csort.Markdup.Bam 
+    //Index Csort.Markdup.Bam
     SAMTOOLS_INDEX(markdup_bam)
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
 
@@ -201,9 +201,9 @@ workflow MERGE_DUP {
     if (params.tools.split(',').contains('markdup')){
         TAR(
             BIOBAMBAM_BAMMARKDUPLICATES2.out.metrics
-            .map{ meta,file-> 
+            .map{ meta,file->
             [
-                [   
+                [
                     study_id:"${meta.study_id}",
                     patient:"${meta.patient}",
                     sex:"${meta.sex}",
@@ -236,13 +236,14 @@ workflow MERGE_DUP {
         .collect()
         .set{ch_cleanup}
 
-        Channel.empty().set{metrics}  
+        Channel.empty().set{metrics}
     }
 
     ch_versions= ch_versions.map{ file -> file.moveTo("${file.getParent()}/.${file.getName()}")}
-    
+
     emit:
     cram_alignment_index = alignment_index
+    bam_post_dup = markdup_bam
     tmp_files = ch_cleanup
     metrics = metrics
     versions = ch_versions                     // channel: [ versions.yml ]
