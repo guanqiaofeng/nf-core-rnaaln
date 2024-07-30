@@ -29,17 +29,17 @@ import csv
 tool_fieldmap = { # 'target name' : 'original name'
     'hisat2': {
         'paired_total' : 'paired_total',
-        'unpaired_total' : 'unpaired_total',
-        'overall_alignment_rate' : 'overall_alignment_rate'
+        'unpaired_total' : 'unpaired_total'
+        # 'overall_alignment_rate' : 'overall_alignment_rate'  # collected from samtools stats
     },
     'star' : {
         'total_reads' : 'total_reads',
         'avg_input_read_length' : 'avg_input_read_length',
-        'uniquely_mapped_percent' : 'uniquely_mapped_percent',
+        'pct_uniquely_mapped' : 'uniquely_mapped_percent',
         'avg_mapped_read_length' : 'avg_mapped_read_length',
         'num_splices' : 'num_splices',
         'num_annotated_splices' : 'num_annotated_splices',
-        'mismatch_rate' : 'mismatch_rate',
+        # 'mismatch_rate' : 'mismatch_rate', # collected from samtools
         'pct_multimapped' : 'multimapped_percent'
     },
     'picard_RnaSeqMetrics': {
@@ -54,6 +54,19 @@ tool_fieldmap = { # 'target name' : 'original name'
         'pct_correct_strand_reads' : 'PCT_CORRECT_STRAND_READS',
         'median_cv_coverage' : 'MEDIAN_CV_COVERAGE',
         'median_5prime_to_3prime_bias' : 'MEDIAN_5PRIME_TO_3PRIME_BIAS'
+    },
+    'samtools_stats': {
+        'pct_reads_mapped': 'reads_mapped_percent',
+        'pct_reads_properly_paired': 'reads_properly_paired_percent',
+        'mean_insert_size': 'insert_size_average',
+        'insert_size_std_deviation': 'insert_size_standard_deviation',
+        'total_pf_reads': 'sequences',
+        'average_base_quality': 'average_quality',
+        'average_read_length': 'average_length',
+        'pct_reads_duplicated': 'reads_duplicated_percent',
+        'non-primary_alignments': 'non-primary_alignments',
+        'pairs_on_different_chromosomes': 'pairs_on_different_chromosomes',
+        'mismatch_bases_rate': 'error_rate'
     }
 }
 
@@ -68,7 +81,7 @@ def get_mqc_stats(multiqc, sampleId):
     for f in sorted(glob(multiqc+'/*.txt')):
         for tool_metrics in tool_fieldmap.keys():
             if f.endswith(tool_metrics+'.txt'):
-                with open(f, 'r') as fn: 
+                with open(f, 'r') as fn:
                     mqc_stats[tool_metrics] = []
                     reader = csv.DictReader(fn, delimiter="\t")
                     for row in reader:
@@ -81,7 +94,7 @@ def get_mqc_stats(multiqc, sampleId):
 
     # convert the fraction to percentage for given fields
     for fn in fra2pct_fields:
-        if not mqc_stats['metrics'].get(fn): 
+        if not mqc_stats['metrics'].get(fn):
             print(f"Field '{fn}' not found in mqc_stats['metrics'] dictionary")
             continue
         new_value = round(float(mqc_stats['metrics'][fn]) * 100, 2)

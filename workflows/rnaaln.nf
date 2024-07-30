@@ -711,8 +711,9 @@ workflow RNAALN {
         PICARD_COLLECTRNASEQMETRICS_S.out.metrics
         .combine(MULTIQC_S.out.picard_multi)
         .combine(MULTIQC_S.out.star_multi)
+        .combine(MULTIQC_S.out.samtools_multi)
         .map{
-            meta, path, picard, star ->
+            meta, path, picard, star, samtools ->
             [
                 [
                     id:"${meta.study_id}.${meta.patient}.${meta.sample}",
@@ -725,7 +726,7 @@ workflow RNAALN {
                     data_type:"${meta.data_type}",
                     date : "${meta.date}",
                     read_groups_count: "${meta.read_groups_count}"
-                ],[picard, star]
+                ],[picard, star, samtools]
             ]
         }
         .set{ch_s_prep_metrics_files}
