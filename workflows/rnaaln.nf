@@ -25,6 +25,8 @@ include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_S } from '../subworkflows/icg
 include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { PICARD_COLLECTRNASEQMETRICS as PICARD_COLLECTRNASEQMETRICS_S } from '../modules/nf-core/picard/collectrnaseqmetrics/main'
 include { PICARD_COLLECTRNASEQMETRICS as PICARD_COLLECTRNASEQMETRICS_H } from '../modules/nf-core/picard/collectrnaseqmetrics/main'
+include { SAMTOOLS_STATS as SAMTOOLS_STATS_S } from '../modules/nf-core/samtools/stats/main'
+include { SAMTOOLS_STATS as SAMTOOLS_STATS_H } from '../modules/nf-core/samtools/stats/main'
 include { MULTIQC as MULTIQC_S } from '../modules/nf-core/multiqc/main'
 include { MULTIQC as MULTIQC_H } from '../modules/nf-core/multiqc/main'
 // include { PREP_METRICS as PREP_METRICS_S } from '../modules/local/prep/rnametrics/main'
@@ -234,7 +236,13 @@ workflow RNAALN {
         UPLOAD_NOVEL_SPLICE_H(PAYLOAD_NOVEL_SPLICE_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_NOVEL_SPLICE_H.out.versions)
 
-
+        // QC Matrics \\
+        // Samtools stats
+        SAMTOOLS_STATS_H(
+            MERG_DUP_H.out.cram_alignment_index,
+            Channel.fromPath(params.reference_fasta).map{ it -> [ [ id:'fasta' ], it ] }
+        )
+        ch_versions = ch_versions.mix(SAMTOOLS_STATS_H.out.versions)
         // Picard
         PICARD_COLLECTRNASEQMETRICS_H(
             MERG_DUP_H.out.bam_post_dup,
@@ -258,6 +266,7 @@ workflow RNAALN {
             .mix(PICARD_COLLECTRNASEQMETRICS_H.out.metrics)
             .mix(HISAT2_ALIGN.out.summary)
             .mix(HISAT2_ALIGN.out.metrix)
+            .mix(SAMTOOLS_STATS_H.out.stats)
         )
 
         ch_multiqc = Channel.empty()
@@ -618,6 +627,13 @@ workflow RNAALN {
         UPLOAD_NOVEL_SPLICE_S(PAYLOAD_NOVEL_SPLICE_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_NOVEL_SPLICE_S.out.versions)
 
+        // QC Matrics \\
+        // Samtools stats
+        SAMTOOLS_STATS_S(
+            MERG_DUP_S.out.cram_alignment_index,
+            Channel.fromPath(params.reference_fasta).map{ it -> [ [ id:'fasta' ], it ] }
+        )
+        ch_versions = ch_versions.mix(SAMTOOLS_STATS_S.out.versions)
         // Picard
         PICARD_COLLECTRNASEQMETRICS_S(
             MERG_DUP_S.out.bam_post_dup,
@@ -635,6 +651,7 @@ workflow RNAALN {
             Channel.empty()
             .mix(PICARD_COLLECTRNASEQMETRICS_S.out.metrics)
             .mix(STAR_ALIGN.out.log_final)
+            .mix(SAMTOOLS_STATS_S.out.stats)
         )
 
         // Check if STAR_ALIGN.out.read_per_gene_tab exists
