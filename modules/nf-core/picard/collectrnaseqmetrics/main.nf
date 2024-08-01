@@ -8,9 +8,10 @@ process PICARD_COLLECTRNASEQMETRICS {
         'biocontainers/picard:3.1.1--hdfd78af_0' }"
 
     input:
-    tuple val(meta), path(bam)
+    tuple val(meta), path(cram), path(crai)
     path ref_flat
     path fasta
+    path fai
     path rrna_intervals
 
     output:
@@ -42,7 +43,7 @@ process PICARD_COLLECTRNASEQMETRICS {
         $rrna \\
         $strandedness \\
         --REF_FLAT $ref_flat \\
-        --INPUT ${bam[0]} \\
+        --INPUT ${bam} \\
         --OUTPUT ${prefix}.rna_metrics
 
     cat <<-END_VERSIONS > versions.yml
