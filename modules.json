@@ -165,6 +165,13 @@
                             "modules"
                         ]
                     },
+                    "gffread": {
+                        "branch": "master",
+                        "git_sha": "6c996d7fbe0816dcbb68ce587ad5f873313682a1",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
                     "hisat2/align": {
                         "branch": "master",
                         "git_sha": "4eed099a12a7d586ce830a662a33a9df5bd67a24",
@@ -186,6 +193,13 @@
                             "modules"
                         ],
                         "patch": "modules/nf-core/picard/collectrnaseqmetrics/picard-collectrnaseqmetrics.diff"
+                    },
+                    "samtools/faidx": {
+                        "branch": "master",
+                        "git_sha": "04fbbc7c43cebc0b95d5b126f6d9fe4effa33519",
+                        "installed_by": [
+                            "modules"
+                        ]
                     },
                     "samtools/flagstat": {
                         "branch": "master",

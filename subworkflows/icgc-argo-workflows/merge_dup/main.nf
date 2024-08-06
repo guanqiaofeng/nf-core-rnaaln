@@ -243,7 +243,6 @@ workflow MERGE_DUP {
 
     emit:
     cram_alignment_index = alignment_index
-    bam_post_dup = markdup_bam
     tmp_files = ch_cleanup
     metrics = metrics
     versions = ch_versions                     // channel: [ versions.yml ]

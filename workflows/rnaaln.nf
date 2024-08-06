@@ -37,6 +37,7 @@ include { PAYLOAD_QCMETRICS as  PAYLOAD_QCMETRICS_S} from '../modules/icgc-argo-
 include { PAYLOAD_QCMETRICS as  PAYLOAD_QCMETRICS_H} from '../modules/icgc-argo-workflows/payload/qcmetrics/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_QC_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_QC_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
+include { PREP_REF_TRANS } from '../subworkflows/local/gen_transcript_ref'
 // include { TAR } from '../modules/local/tar/main'
 
 
@@ -66,10 +67,10 @@ workflow RNAALN {
                             .mix( Channel.fromPath(params.reference_fai)
                             .map{ path -> [ [id: 'fai'], path ] } )
 
-    ch_ref_trans = Channel.fromPath(params.reference_trans_fasta)
-                            .map{ path -> [ [id: 'fasta'], path ] }
-                            .mix( Channel.fromPath(params.reference_trans_fai)
-                            .map{ path -> [ [id: 'fai'], path ] } )
+    // ch_ref_trans = Channel.fromPath(params.reference_trans_fasta)
+    //                         .map{ path -> [ [id: 'fasta'], path ] }
+    //                         .mix( Channel.fromPath(params.reference_trans_fai)
+    //                         .map{ path -> [ [id: 'fai'], path ] } )
 
     // HISAT2 //
     if (params.tools.split(',').contains('hisat2_aln')){
@@ -482,6 +483,15 @@ workflow RNAALN {
         UPLOAD_ALIGNMENT_S(PAYLOAD_ALIGNMENT_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_S.out.versions)
         // UPLOAD_ALIGNMENT_S.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
+
+        if (!binding.hasVariable('ch_ref_trans') || !ch_ref_trans) {
+            // Prepare transcript fasta and fai
+            PREP_REF_TRANS(
+                Channel.fromPath(params.reference_fasta), // path(fasta)
+                gtf // [meta, path(fasta)]
+            )
+            ch_ref_trans = PREP_REF_TRANS.out.trans_ref
+        }
 
         // MERG in sample level - alignment transcriptome
         MERG_DUP_ST( //[val(meta), path(file1)],[[val(meta),[path(fileA)],[val(meta),[path(fileB)],]
