@@ -43,7 +43,7 @@ process PICARD_COLLECTRNASEQMETRICS {
         $rrna \\
         $strandedness \\
         --REF_FLAT $ref_flat \\
-        --INPUT ${bam} \\
+        --INPUT $bam \\
         --OUTPUT ${prefix}.rna_metrics
 
     cat <<-END_VERSIONS > versions.yml

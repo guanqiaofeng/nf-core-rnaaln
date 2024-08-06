@@ -1,0 +1,33 @@
+Changes in module 'nf-core/picard/collectrnaseqmetrics'
+--- modules/nf-core/picard/collectrnaseqmetrics/main.nf
++++ modules/nf-core/picard/collectrnaseqmetrics/main.nf
+@@ -8,9 +8,10 @@
+         'biocontainers/picard:3.1.1--hdfd78af_0' }"
+ 
+     input:
+-    tuple val(meta), path(bam)
++    tuple val(meta), path(bam), path(bai)
+     path ref_flat
+     path fasta
++    path fai
+     path rrna_intervals
+ 
+     output:
+@@ -26,6 +27,7 @@
+     def prefix = task.ext.prefix ?: "${meta.id}"
+     def reference = fasta ? "--REFERENCE_SEQUENCE ${fasta}" : ""
+     def rrna = rrna_intervals ? "--RIBOSOMAL_INTERVALS ${rrna_intervals}" : ""
++    def strandedness = meta.strandedness == 'forward' ? '--STRAND_SPECIFICITY FIRST_READ_TRANSCRIPTION_STRAND' : meta.strandedness == 'reverse' ? '--STRAND_SPECIFICITY SECOND_READ_TRANSCRIPTION_STRAND' : '--STRAND_SPECIFICITY NONE'
+     def avail_mem = 3072
+     if (!task.memory) {
+         log.info '[Picard CollectRnaSeqMetrics] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
+@@ -39,6 +41,7 @@
+         $args \\
+         $reference \\
+         $rrna \\
++        $strandedness \\
+         --REF_FLAT $ref_flat \\
+         --INPUT $bam \\
+         --OUTPUT ${prefix}.rna_metrics
+
+************************************************************
