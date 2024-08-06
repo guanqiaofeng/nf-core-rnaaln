@@ -637,10 +637,17 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(SAMTOOLS_STATS_S.out.versions)
         // Picard
+        // PICARD_COLLECTRNASEQMETRICS_S(
+        //     MERG_DUP_S.out.bam_post_dup,
+        //     Channel.fromPath(params.ref_flat),
+        //     Channel.fromPath(params.reference_fasta),
+        //     Channel.fromPath(params.rrna_intervals)
+        // )
         PICARD_COLLECTRNASEQMETRICS_S(
-            MERG_DUP_S.out.bam_post_dup,
+            MERG_DUP_S.out.cram_alignment_index,
             Channel.fromPath(params.ref_flat),
             Channel.fromPath(params.reference_fasta),
+            Channel.fromPath(params.reference_fai),
             Channel.fromPath(params.rrna_intervals)
         )
         ch_versions = ch_versions.mix(PICARD_COLLECTRNASEQMETRICS_S.out.versions)

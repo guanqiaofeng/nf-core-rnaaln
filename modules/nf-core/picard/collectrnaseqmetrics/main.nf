@@ -8,7 +8,7 @@ process PICARD_COLLECTRNASEQMETRICS {
         'biocontainers/picard:3.1.1--hdfd78af_0' }"
 
     input:
-    tuple val(meta), path(cram), path(crai)
+    tuple val(meta), path(bam), path(bai)
     path ref_flat
     path fasta
     path fai
