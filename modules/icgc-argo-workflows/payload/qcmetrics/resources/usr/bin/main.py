@@ -167,12 +167,6 @@ def get_files_info(file_to_upload, date_str, analysis_dict, process_indicator, m
         metric_info_updated.append(metric_item)
     file_info['info'].update({'metrics': metric_info_updated})
 
-    # metric_info = multiqc.get(file_type, {})
-    # metric_info_updated = {}
-    # for key, value in metric_info.items():
-    #     metric_info_updated[key] = value
-    # file_info['info'].update({'metrics': metric_info_updated})
-
     # file naming patterns:
     #   pattern:  <argo_study_id>.<argo_donor_id>.<argo_sample_id>.<experiment_strategy>.<date>.<process_indicator>.<file_type>.<file_ext>
     #   process_indicator: pre-alignment, alignment(aligner), post-alignment(caller)
@@ -294,7 +288,6 @@ def main():
         'workflow': {
             'workflow_name': args.wf_name,
             'workflow_version': args.wf_version,
-            # "genome_build": analysis_dict['workflow']['genome_build'],
             "genome_build": 'GRCh38_Verily_v1',
             'session_id': args.wf_session,
             'inputs': [
