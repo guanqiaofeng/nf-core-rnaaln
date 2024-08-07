@@ -38,5 +38,3 @@ process PAYLOAD_QCMETRICS {
         END_VERSIONS
         """
 }
-
-        // -w "${workflow.manifest.name}" \
