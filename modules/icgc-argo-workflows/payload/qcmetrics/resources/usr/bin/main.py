@@ -24,7 +24,6 @@
 import os
 import sys
 import argparse
-import subprocess
 import json
 import re
 import hashlib
@@ -34,9 +33,6 @@ from datetime import date
 import copy
 from glob import glob
 import yaml
-import csv
-import io
-from math import log10, isnan
 
 workflow_process_map = {
     'Pre Alignment QC': 'prealn',

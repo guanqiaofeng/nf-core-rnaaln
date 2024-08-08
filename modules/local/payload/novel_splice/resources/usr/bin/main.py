@@ -25,18 +25,12 @@ import sys
 import json
 import sys
 import argparse
-import subprocess
 import json
-import re
 import hashlib
 import uuid
-import tarfile
 from datetime import date
 import copy
-from glob import glob
 import yaml
-import io
-import shutil
 
 workflow_full_name = {
     'rna-seq-alignment': 'RNA Alignment'
