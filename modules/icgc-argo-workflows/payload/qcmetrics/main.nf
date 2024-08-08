@@ -19,16 +19,15 @@ process PAYLOAD_QCMETRICS {
 
     script:
       // add and initialize variables here as needed
-        def arg_workflow = "-w \"${(workflow.manifest.name.endsWith('QC') ? workflow.manifest.name : workflow.manifest.name + ' QC')}\""
         def arg_pipeline_yml = pipeline_yml ? "-p $pipeline_yml" : ''
         def arg_multiqc = multiqc ? "-m $multiqc" : ''
         """
         main.py \
         -f ${files_to_upload} \
         -a ${metadata_analysis} \
+        -w "${workflow.manifest.name}" \
         -s ${workflow.sessionId} \
         -v ${workflow.manifest.version} \
-        -w "${workflow.manifest.name}" \
         $arg_pipeline_yml \
         $arg_multiqc
 

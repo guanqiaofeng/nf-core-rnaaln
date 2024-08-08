@@ -39,7 +39,7 @@ import io
 import shutil
 
 workflow_full_name = {
-    'rna-seq-alignment': 'RNA Seq Alignment'
+    'rna-seq-alignment': 'RNA Alignment'
 }
 
 def calculate_size(file_path):
