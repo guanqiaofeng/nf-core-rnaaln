@@ -228,8 +228,9 @@ workflow RNAALN {
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
             .mix(HISAT2_ALIGN.out.versions)
-            .mix(NOVEL_SPLICE_MERGE_H.out.versions)
-            .collectFile(name: 'collated_versions.yml')
+            .collectFile(name: 'collated_versions.yml'),
+            params.genome_build,
+            params.genome_annotation
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
 

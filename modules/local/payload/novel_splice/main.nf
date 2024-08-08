@@ -10,6 +10,8 @@ process PAYLOAD_SPLICE_JUNCTION {
     input:  // input, make update as needed
       tuple val(meta), path(file_to_upload), path(metadata_analysis)
       path pipeline_yml
+      val genome_build
+      val genome_annotation
 
     output:  // output, make update as needed
       tuple val(meta), path("*.payload.json"), path("out/*"), emit: payload_files
@@ -27,6 +29,7 @@ process PAYLOAD_SPLICE_JUNCTION {
         -s "${workflow.sessionId}" \
         -v "${workflow.manifest.version}" \
         -c "${meta.read_groups_count}" \
+        -b "${genome_build}" \
         $arg_pipeline_yml
 
       cat <<-END_VERSIONS > versions.yml

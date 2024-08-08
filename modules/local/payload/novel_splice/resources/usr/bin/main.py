@@ -140,6 +140,7 @@ def main(args):
             'workflow_name': workflow_full_name.get(args.wf_name, args.wf_name),
             'workflow_version': args.wf_version,
             'genome_build': args.genome_build,
+            'genome_annotation': args.genome_annotation,
             'run_id': args.wf_run,
             'session_id': args.wf_session,
             'inputs': [
@@ -207,6 +208,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--wf_run", dest="wf_run", required=True, help="workflow run ID")
     parser.add_argument("-s", "--wf_session", dest="wf_session", required=True, help="workflow session ID")
     parser.add_argument("-b", "--genome_build", dest="genome_build", default="GRCh38_Verily_v1", help="Genome build")
+    parser.add_argument("-n", "--genome_annotation", dest="genome_annotation", default="GENCODE v40", help="Genome annotation")
     parser.add_argument("-p", "--pipeline_yml", dest="pipeline_yml", required=False, help="Pipeline info in yaml")
     parser.add_argument("-c", "--read_group_count", dest="read_group_count", required=True,type=int,help="read_group_count")
 
