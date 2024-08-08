@@ -28,7 +28,7 @@ process PAYLOAD_QCMETRICS {
         -a ${metadata_analysis} \
         -s ${workflow.sessionId} \
         -v ${workflow.manifest.version} \
-        $arg_workflow \
+        -w "${workflow.manifest.name}" \
         $arg_pipeline_yml \
         $arg_multiqc
 

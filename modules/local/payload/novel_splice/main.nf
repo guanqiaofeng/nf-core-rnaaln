@@ -24,7 +24,7 @@ process PAYLOAD_NOVEL_SPLICE {
       main.py \
         -f ${file_to_upload} \
         -a ${metadata_analysis} \
-        -w "RNA Seq Alignment" \
+        -w "${workflow.manifest.name}" \
         -r ${workflow.runName} \
         -s "${workflow.sessionId}" \
         -v "${workflow.manifest.version}" \
