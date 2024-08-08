@@ -255,6 +255,8 @@ def main():
     parser.add_argument("-w", "--wf-name", dest="wf_name", required=True, help="Workflow name")
     parser.add_argument("-s", "--wf-session", dest="wf_session", required=True, help="workflow session ID")
     parser.add_argument("-v", "--wf-version", dest="wf_version", required=True, help="Workflow version")
+    parser.add_argument("-b", "--genome_build", dest="genome_build", default="GRCh38_Verily_v1", help="Genome build")
+    parser.add_argument("-n", "--genome_annotation", dest="genome_annotation", default="GENCODE v40", help="Genome annotation")
     parser.add_argument("-p", "--pipeline_yml", dest="pipeline_yml", required=False, help="Pipeline info in yaml")
     parser.add_argument("-m", "--multiqc", dest="multiqc", required=False, help="multiqc json file")
 
@@ -293,7 +295,8 @@ def main():
         'workflow': {
             'workflow_name': args.wf_name,
             'workflow_version': args.wf_version,
-            "genome_build": 'GRCh38_Verily_v1',
+            'genome_build': args.genome_build,
+            'genome_annotation': args.genome_annotation,
             'session_id': args.wf_session,
             'inputs': [
                 {

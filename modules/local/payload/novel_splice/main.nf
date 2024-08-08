@@ -30,6 +30,7 @@ process PAYLOAD_SPLICE_JUNCTION {
         -v "${workflow.manifest.version}" \
         -c "${meta.read_groups_count}" \
         -b "${genome_build}" \
+        -n "${genome_annotation}" \
         $arg_pipeline_yml
 
       cat <<-END_VERSIONS > versions.yml

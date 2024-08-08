@@ -404,7 +404,9 @@ workflow RNAALN {
             .mix(MERG_DUP_H.out.versions)
             .mix(PICARD_COLLECTRNASEQMETRICS_H.out.versions)
             .mix(MULTIQC_H.out.versions)
-            .collectFile(name: 'collated_versions.yml')
+            .collectFile(name: 'collated_versions.yml'),
+            params.genome_build,
+            params.genome_annotation
             )
         ch_versions = ch_versions.mix(PAYLOAD_QCMETRICS_H.out.versions)
 
