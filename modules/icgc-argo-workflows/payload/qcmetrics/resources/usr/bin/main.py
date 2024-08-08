@@ -255,8 +255,8 @@ def main():
     parser.add_argument("-w", "--wf-name", dest="wf_name", required=True, help="Workflow name")
     parser.add_argument("-s", "--wf-session", dest="wf_session", required=True, help="workflow session ID")
     parser.add_argument("-v", "--wf-version", dest="wf_version", required=True, help="Workflow version")
-    parser.add_argument("-b", "--genome_build", dest="genome_build", default="GRCh38_Verily_v1", help="Genome build")
-    parser.add_argument("-n", "--genome_annotation", dest="genome_annotation", default="GENCODE v40", help="Genome annotation")
+    parser.add_argument("-b", "--genome_build", dest="genome_build", help="Genome build")
+    parser.add_argument("-n", "--genome_annotation", dest="genome_annotation", help="Genome annotation")
     parser.add_argument("-p", "--pipeline_yml", dest="pipeline_yml", required=False, help="Pipeline info in yaml")
     parser.add_argument("-m", "--multiqc", dest="multiqc", required=False, help="multiqc json file")
 
@@ -295,8 +295,6 @@ def main():
         'workflow': {
             'workflow_name': args.wf_name,
             'workflow_version': args.wf_version,
-            'genome_build': args.genome_build,
-            'genome_annotation': args.genome_annotation,
             'session_id': args.wf_session,
             'inputs': [
                 {
@@ -311,11 +309,16 @@ def main():
         'experiment': analysis_dict.get('experiment'),
         'samples': get_sample_info(analysis_dict.get('samples'))
     }
-    # if analysis_dict.get('workflow'):
-    #   if analysis_dict['workflow'].get('genome_build'):
-    #      payload['workflow']['genome_build'] = analysis_dict['workflow'].get('genome_build')
-    #   if analysis_dict['workflow'].get('genome_annotation'):
-    #      payload['workflow']['genome_annotation'] = analysis_dict['workflow'].get('genome_annotation')
+    if analysis_dict.get('workflow'):
+      if analysis_dict['workflow'].get('genome_build'):
+        payload['workflow']['genome_build'] = analysis_dict['workflow'].get('genome_build')
+      if analysis_dict['workflow'].get('genome_annotation'):
+         payload['workflow']['genome_annotation'] = analysis_dict['workflow'].get('genome_annotation')
+    else:
+      if args.genome_build:
+        payload['workflow']['genome_build'] = args.genome_build
+      if args.genome_annotation:
+        payload['workflow']['genome_annotation'] = args.genome_annotation
 
     # pass `info` dict from seq_experiment payload to new payload
     if 'info' in analysis_dict and isinstance(analysis_dict['info'], dict):
