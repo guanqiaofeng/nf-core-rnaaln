@@ -19,8 +19,8 @@ include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_ST } from '../subworkflows/icgc-
 include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { NOVEL_SPLICE_MERGE as NOVEL_SPLICE_MERGE_S } from '../modules/local/novelsplice/main.nf'
 include { NOVEL_SPLICE_MERGE as NOVEL_SPLICE_MERGE_H } from '../modules/local/novelsplice/main.nf'
-include { PAYLOAD_NOVEL_SPLICE as PAYLOAD_NOVEL_SPLICE_S } from '../modules/local/payload/novel_splice/main'
-include { PAYLOAD_NOVEL_SPLICE as PAYLOAD_NOVEL_SPLICE_H } from '../modules/local/payload/novel_splice/main'
+include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_S } from '../modules/local/payload/novel_splice/main'
+include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_H } from '../modules/local/payload/novel_splice/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { PICARD_COLLECTRNASEQMETRICS as PICARD_COLLECTRNASEQMETRICS_S } from '../modules/nf-core/picard/collectrnaseqmetrics/main'
@@ -223,7 +223,7 @@ workflow RNAALN {
         .set{ch_h_novel_splice_payload}
 
         // Make payload - splice junctions
-        PAYLOAD_NOVEL_SPLICE_H(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
+        PAYLOAD_SPLICE_JUNCTION_H(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
             ch_h_novel_splice_payload.upload,
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
@@ -234,7 +234,7 @@ workflow RNAALN {
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
 
         // Upload files - aligment
-        UPLOAD_NOVEL_SPLICE_H(PAYLOAD_NOVEL_SPLICE_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
+        UPLOAD_NOVEL_SPLICE_H(PAYLOAD_SPLICE_JUNCTION_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_NOVEL_SPLICE_H.out.versions)
 
         // QC Matrics \\
@@ -625,7 +625,7 @@ workflow RNAALN {
         .set{ch_s_novel_splice_payload}
 
         // Make payload - splice junction
-        PAYLOAD_NOVEL_SPLICE_S(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
+        PAYLOAD_SPLICE_JUNCTION_S(  // [val (meta), [path(cram),path(crai)],path(analysis_json)]
             ch_s_novel_splice_payload.upload,
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
@@ -636,7 +636,7 @@ workflow RNAALN {
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_S.out.versions)
 
         // Upload files - aligment
-        UPLOAD_NOVEL_SPLICE_S(PAYLOAD_NOVEL_SPLICE_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
+        UPLOAD_NOVEL_SPLICE_S(PAYLOAD_SPLICE_JUNCTION_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_NOVEL_SPLICE_S.out.versions)
 
         // QC Matrics \\

@@ -21,7 +21,7 @@
                     },
                     "payload/qcmetrics": {
                         "branch": "update_payload",
-                        "git_sha": "b20fc2a5344c6b48f06603dc20d2c532de5db6f8",
+                        "git_sha": "0ba95ce908d9842b6087c39902b753c0b5f4b0a8",
                         "installed_by": [
                             "modules"
                         ]

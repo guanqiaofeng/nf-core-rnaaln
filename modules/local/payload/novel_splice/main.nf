@@ -1,7 +1,6 @@
-process PAYLOAD_NOVEL_SPLICE {
+process PAYLOAD_SPLICE_JUNCTION {
     tag "$meta.id"
     label 'process_single'
-
 
     conda "bioconda::multiqc=1.13"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -11,7 +10,6 @@ process PAYLOAD_NOVEL_SPLICE {
     input:  // input, make update as needed
       tuple val(meta), path(file_to_upload), path(metadata_analysis)
       path pipeline_yml
-
 
     output:  // output, make update as needed
       tuple val(meta), path("*.payload.json"), path("out/*"), emit: payload_files

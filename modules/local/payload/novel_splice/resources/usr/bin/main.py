@@ -84,18 +84,18 @@ def rename_file(f, payload, rg_count, sample_info, date_str):
     return dst
 
 
-def get_files_info(file_to_upload,pipeline_info):
+def get_files_info(file_to_upload,updated_pipeline_info):
     return {
         'fileName': os.path.basename(file_to_upload),
         'fileType': file_to_upload.split(".")[-1].upper(),
         'fileSize': calculate_size(file_to_upload),
         'fileMd5sum': calculate_md5(file_to_upload),
         'fileAccess': 'controlled',
-        'dataType': 'Aligned Reads' if file_to_upload.split(".")[-1] in ('bam', 'cram') else 'Aligned Reads Index',
+        'dataType': 'Splice Junctions',
         'info': {
-            'data_category': 'Sequencing Reads',
+            'data_category': 'Splice Junctions',
             'data_subtypes': None,
-            'analysis_tools': [{key.split(":")[-1]:pipeline_info[key]} for key in pipeline_info.keys()]
+            'analysis_tools': updated_pipeline_info
             }
     }
 
@@ -120,10 +120,15 @@ def main(args):
       with open(args.pipeline_yml, 'r') as f:
         pipeline_info = yaml.safe_load(f)
 
+    updated_pipeline_info = {}
     for key, value in pipeline_info.items():
+       new_key = key.split(":")[-1]
+       updated_pipeline_info[new_key] = value
+
+    for key, value in updated_pipeline_info.items():
         for sub_key, sub_value in value.items():
             value[sub_key] = str(sub_value)
-        pipeline_info[key] = value
+        updated_pipeline_info[key] = value
 
     payload = {
         'analysisType': {
