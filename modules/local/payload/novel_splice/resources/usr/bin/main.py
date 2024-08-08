@@ -68,7 +68,7 @@ def rename_file(f, payload, rg_count, sample_info, date_str):
         sample_info[0]['sampleId'],
         experimental_strategy,
         date_str,
-        'novel_splice',
+        'splice-junctions',
         file_ext
     )
 
@@ -93,7 +93,7 @@ def get_files_info(file_to_upload,updated_pipeline_info):
         'fileAccess': 'controlled',
         'dataType': 'Splice Junctions',
         'info': {
-            'data_category': 'Splice Junctions',
+            'data_category': 'Transcriptome Profiling',
             'data_subtypes': None,
             'analysis_tools': updated_pipeline_info
             }
@@ -188,7 +188,7 @@ def main(args):
     date_str = date.today().strftime("%Y%m%d")
     for f in args.files_to_upload:
         renamed_file = rename_file(f, payload, rg_count, seq_experiment_analysis_dict['samples'], date_str)
-        payload['files'].append(get_files_info(renamed_file,pipeline_info))
+        payload['files'].append(get_files_info(renamed_file,updated_pipeline_info))
 
     with open("%s.rna_alignment.payload.json" % str(uuid.uuid4()), 'w') as f:
         f.write(json.dumps(payload, indent=2))

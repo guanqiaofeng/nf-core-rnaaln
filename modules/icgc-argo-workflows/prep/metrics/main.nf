@@ -38,7 +38,7 @@ process PREP_METRICS {
             -s $meta.sample \\
             -q $qc_files
         ;;
-    'RNA Alignment')
+    'RNA Seq Alignment')
         rnaaln.py \\
             -m $multiqc \\
             -s $meta.sample

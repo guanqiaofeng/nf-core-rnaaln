@@ -41,7 +41,7 @@ from math import log10, isnan
 workflow_process_map = {
     'Pre Alignment QC': 'prealn',
     'DNA Alignment QC': 'aln',
-    'RNA Alignment': 'aln'
+    'RNA Seq Alignment': 'aln'
 }
 
 tool_list = ['fastqc', 'cutadapt', 'CollectMultipleMetrics', 'CollectWgsMetrics', 'CollectHsMetrics', 'stats', 'mosdepth', 'CollectOxoGMetrics', 'contamination', 'picard_RnaSeqMetrics', 'hisat2', 'star']
