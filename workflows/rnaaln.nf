@@ -480,7 +480,9 @@ workflow RNAALN {
             .mix(STAGE_INPUT.out.versions)
             .mix(STAR_ALIGN.out.versions)
             .mix(MERG_DUP_S.out.versions)
-            .collectFile(name: 'collated_versions.yml')
+            .collectFile(name: 'collated_versions.yml'),
+            params.genome_build,
+            params.genome_annotation
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_S.out.versions)
 
@@ -541,7 +543,9 @@ workflow RNAALN {
             .mix(STAGE_INPUT.out.versions)
             .mix(STAR_ALIGN.out.versions)
             .mix(MERG_DUP_ST.out.versions)
-            .collectFile(name: 'collated_versions.yml')
+            .collectFile(name: 'collated_versions.yml'),
+            params.genome_build,
+            params.genome_annotation
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_ST.out.versions)
 
@@ -635,8 +639,9 @@ workflow RNAALN {
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
             .mix(STAR_ALIGN.out.versions)
-            .mix(NOVEL_SPLICE_MERGE_S.out.versions)
-            .collectFile(name: 'collated_versions.yml')
+            .collectFile(name: 'collated_versions.yml'),
+            params.genome_build,
+            params.genome_annotation
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_S.out.versions)
 
@@ -797,7 +802,9 @@ workflow RNAALN {
             .mix(MERG_DUP_S.out.versions)
             .mix(PICARD_COLLECTRNASEQMETRICS_S.out.versions)
             .mix(MULTIQC_S.out.versions)
-            .collectFile(name: 'collated_versions.yml')
+            .collectFile(name: 'collated_versions.yml'),
+            params.genome_build,
+            params.genome_annotation
             )
         ch_versions = ch_versions.mix(PAYLOAD_QCMETRICS_S.out.versions)
 
