@@ -4,7 +4,7 @@ process SCORE_UPLOAD {
     label 'process_medium'
 
     pod = [secret: workflow.runName + "-secret", mountPath: "/tmp/rdpc_secret"]
-    container "${ params.score_container ?: 'ghcr.io/overture-stack/score' }:${ params.score_container_version ?: '5.8.1' }"
+    container "${ params.score_container ?: 'ghcr.io/overture-stack/score' }:${ params.score_container_version ?: '5.10.1' }"
 
     if (workflow.containerEngine == "singularity") {
         containerOptions "--bind \$(pwd):/score-client/logs"
@@ -29,14 +29,14 @@ process SCORE_UPLOAD {
     def transport_parallel = params.transport_parallel ?: task.cpus
     def transport_mem = params.transport_mem ?: "2"
     def accessToken = task.ext.api_upload_token ?: "`cat /tmp/rdpc_secret/secret`"
-    def VERSION = params.score_container_version ?: '5.8.1'
+    def VERSION = params.score_container_version ?: '5.10.1'
     """
     export METADATA_URL=${song_url}
     export STORAGE_URL=${score_url}
     export TRANSPORT_PARALLEL=${transport_parallel}
     export TRANSPORT_MEMORY=${transport_mem}
     export ACCESSTOKEN=${accessToken}
-    
+
     score-client upload --manifest ${manifest} $args
 
     cat <<-END_VERSIONS > versions.yml

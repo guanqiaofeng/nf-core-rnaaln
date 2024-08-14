@@ -11,16 +11,23 @@ include { STAR_ALIGN } from '../modules/local/star/align/main'
 include { MERGE_DUP as MERG_DUP_S } from '../subworkflows/icgc-argo-workflows/merge_dup/main'
 include { MERGE_DUP as MERG_DUP_ST } from '../subworkflows/icgc-argo-workflows/merge_dup/main'
 include { MERGE_DUP as MERG_DUP_H } from '../subworkflows/icgc-argo-workflows/merge_dup/main'
-include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_S } from '../modules/local/payload/rnaseqalignment/main'
-include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_ST } from '../modules/local/payload/rnaseqalignment/main'
-include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_H } from '../modules/local/payload/rnaseqalignment/main'
+// include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_S } from '../modules/local/payload/rnaseqalignment/main'
+// include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_ST } from '../modules/local/payload/rnaseqalignment/main'
+// include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_H } from '../modules/local/payload/rnaseqalignment/main'
+
+include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_S } from '../modules/icgc-argo-workflows/payload/alignment/main'
+include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_ST } from '../modules/icgc-argo-workflows/payload/alignment/main'
+include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_H } from '../modules/icgc-argo-workflows/payload/alignment/main'
+
 include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_ST } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { NOVEL_SPLICE_MERGE as NOVEL_SPLICE_MERGE_S } from '../modules/local/novelsplice/main.nf'
 include { NOVEL_SPLICE_MERGE as NOVEL_SPLICE_MERGE_H } from '../modules/local/novelsplice/main.nf'
-include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_S } from '../modules/local/payload/novel_splice/main'
-include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_H } from '../modules/local/payload/novel_splice/main'
+// include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_S } from '../modules/local/payload/novel_splice/main'
+// include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_H } from '../modules/local/payload/novel_splice/main'
+include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_S } from '../modules/icgc-argo-workflows/payload/splicejunction/main'
+include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_H } from '../modules/icgc-argo-workflows/payload/splicejunction/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { PICARD_COLLECTRNASEQMETRICS as PICARD_COLLECTRNASEQMETRICS_S } from '../modules/nf-core/picard/collectrnaseqmetrics/main'
@@ -234,7 +241,7 @@ workflow RNAALN {
             params.genome_build,
             params.genome_annotation
         )
-        ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
+        ch_versions = ch_versions.mix(PAYLOAD_SPLICE_JUNCTION_H.out.versions)
 
         // Upload files - aligment
         UPLOAD_NOVEL_SPLICE_H(PAYLOAD_SPLICE_JUNCTION_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
@@ -388,7 +395,7 @@ workflow RNAALN {
                     study_id : "${meta.study_id}",
                     date :"${new Date().format("yyyyMMdd")}",
                     upRdpc : upRdpc
-                ],meta_analysis, qcfiles_to_upload, multiqc
+                ], qcfiles_to_upload, meta_analysis, multiqc
             ]
         }.branch{
             upload : it[0].upRdpc
@@ -784,7 +791,7 @@ workflow RNAALN {
                     study_id : "${meta.study_id}",
                     date :"${new Date().format("yyyyMMdd")}",
                     upRdpc : upRdpc
-                ],meta_analysis, qcfiles_to_upload, multiqc
+                ],qcfiles_to_upload, meta_analysis, multiqc
             ]
         }.branch{
             upload : it[0].upRdpc

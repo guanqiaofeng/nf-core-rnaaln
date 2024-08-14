@@ -32,10 +32,10 @@ import sys
 import uuid
 import yaml
 
-workflow_full_name = {
-    'rna-seq-alignment': 'RNA Seq Alignment',
-    'dna-seq-alignment': 'DNA Seq Alignment'
-}
+# workflow_full_name = {
+#     'rna-seq-alignment': 'RNA Seq Alignment',
+#     'dna-seq-alignment': 'DNA Seq Alignment'
+# }
 
 def calculate_size(file_path):
     return os.stat(file_path).st_size
@@ -144,7 +144,7 @@ def main(args):
         'studyId': seq_experiment_analysis_dict.get('studyId'),
         'info': {},
         'workflow': {
-            'workflow_name': workflow_full_name.get(args.wf_name, args.wf_name),
+            'workflow_name': args.wf_name,
             'workflow_version': args.wf_version,
             'genome_build': args.genome_build,
             'run_id': args.wf_run,

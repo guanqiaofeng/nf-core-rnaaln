@@ -18,7 +18,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
   Authors:
-    Linda Xiang
+    Linda Xiang <linda.xiang@oicr.on.ca>
+    Guanqiao Feng <gfeng@oicr.on.ca>
 """
 
 import os
@@ -137,7 +138,6 @@ def get_files_info(file_to_upload, date_str, analysis_dict, process_indicator, m
         file_info['info'].update({'description': 'Picard tool to collect metrics describing the distribution of the bases within the transcripts.'})
 
     elif re.match(r'.+?hisat2.', file_to_upload): # to be more specific in the future to match other matching styles
-        # file_type = 'hisat2_summary'
         file_type = 'hisat2'
         file_info.update({'dataType': 'Aligned Reads QC'})
         file_info['info']['data_subtypes'] = ['Library Quality', 'Read Characteristics']
@@ -145,13 +145,11 @@ def get_files_info(file_to_upload, date_str, analysis_dict, process_indicator, m
         file_info['info'].update({'description': 'Hisat2 alignment summary file to collect metrics describing mapping rates.'})
 
     elif re.match(r'.+?star.', file_to_upload): # to be more specific in the future to match other matching styles
-        # file_type = 'star_log'
         file_type = 'star'
         file_info.update({'dataType': 'Aligned Reads QC'})
         file_info['info']['data_subtypes'] = ['Library Quality', 'Read Characteristics']
         file_info['info'].update({'analysis_tools': ['STAR:log']})
         file_info['info'].update({'description': 'STAR alignment summary file to collect metrics describing mapping metrics.'})
-
 
     else:
         sys.exit('Error: unknown QC metrics file: %s' % file_to_upload)

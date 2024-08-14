@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
- Copyright (c) 2019, Ontario Institute for Cancer Research (OICR).
+ Copyright (c) 2024, Ontario Institute for Cancer Research (OICR).
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU Affero General Public License as published
@@ -16,25 +16,19 @@
  You should have received a copy of the GNU Affero General Public License
  along with this program. If not, see <https://www.gnu.org/licenses/>.
 
- Author: Junjun Zhang <junjun.zhang@oicr.on.ca>
-         Linda Xiang <linda.xiang@oicr.on.ca>
+ Author: Guanqiao Feng <gfeng@oicr.on.ca>
  """
 
+from datetime import date
+import argparse
+import copy
+import hashlib
+import json
 import os
 import sys
-import json
-import sys
-import argparse
-import json
-import hashlib
 import uuid
-from datetime import date
-import copy
 import yaml
 
-# workflow_full_name = {
-#     'rna-seq-alignment': 'RNA Alignment'
-# }
 
 def calculate_size(file_path):
     return os.stat(file_path).st_size
@@ -51,18 +45,31 @@ def calculate_md5(file_path):
 def rename_file(f, payload, rg_count, sample_info, date_str):
     experimental_strategy = payload['experiment']['experimental_strategy'].lower()
 
-    if f.endswith('.txt'):
-        file_ext = 'txt'
+    if f.endswith('.bam'):
+        file_ext = 'bam'
+    elif f.endswith('.bam.bai'):
+        file_ext = 'bam.bai'
+    elif f.endswith('.cram'):
+        file_ext = 'cram'
+    elif f.endswith('.cram.crai'):
+        file_ext = 'cram.crai'
     else:
         sys.exit('Error: unknown aligned seq extention: %s' % f)
 
-    new_name = "%s.%s.%s.%s.%s.%s.%s" % (
+    aln_type = ''
+    if 'transcriptAlign' in f:
+        aln_type = 'transcriptAlign'
+    else:
+        aln_type = 'genomeAlign'
+
+    new_name = "%s.%s.%s.%s.%s.%s.%s.%s" % (
         payload['studyId'],
         sample_info[0]['donor']['donorId'],
         sample_info[0]['sampleId'],
         experimental_strategy,
+        aln_type,
         date_str,
-        'splice-junctions',
+        'aln',
         file_ext
     )
 
@@ -78,18 +85,17 @@ def rename_file(f, payload, rg_count, sample_info, date_str):
     return dst
 
 
-def get_files_info(file_to_upload,updated_pipeline_info):
+def get_files_info(file_to_upload):
     return {
         'fileName': os.path.basename(file_to_upload),
         'fileType': file_to_upload.split(".")[-1].upper(),
         'fileSize': calculate_size(file_to_upload),
         'fileMd5sum': calculate_md5(file_to_upload),
         'fileAccess': 'controlled',
-        'dataType': 'Splice Junctions',
+        'dataType': 'Aligned Reads' if file_to_upload.split(".")[-1] in ('bam', 'cram') else 'Aligned Reads Index',
         'info': {
-            'data_category': 'Transcriptome Profiling',
-            'data_subtypes': None,
-            'analysis_tools': updated_pipeline_info
+            'data_category': 'Sequencing Reads',
+            'data_subtypes': None
             }
     }
 
@@ -111,13 +117,13 @@ def main(args):
 
     pipeline_info = {}
     if args.pipeline_yml:
-      with open(args.pipeline_yml, 'r') as f:
-        pipeline_info = yaml.safe_load(f)
+        with open(args.pipeline_yml, 'r') as f:
+            pipeline_info = yaml.safe_load(f)
 
     updated_pipeline_info = {}
     for key, value in pipeline_info.items():
-       new_key = key.split(":")[-1]
-       updated_pipeline_info[new_key] = value
+        new_key = key.split(":")[-1]
+        updated_pipeline_info[new_key] = value
 
     for key, value in updated_pipeline_info.items():
         for sub_key, sub_value in value.items():
@@ -126,7 +132,7 @@ def main(args):
 
     payload = {
         'analysisType': {
-            'name': 'splice_junctions'
+            'name': 'sequencing_alignment'
         },
         'studyId': seq_experiment_analysis_dict.get('studyId'),
         'info': {},
@@ -134,9 +140,9 @@ def main(args):
             'workflow_name': args.wf_name,
             'workflow_version': args.wf_version,
             'genome_build': args.genome_build,
-            'genome_annotation': args.genome_annotation,
             'run_id': args.wf_run,
             'session_id': args.wf_session,
+            'pipeline_info': updated_pipeline_info,
             'inputs': [
                 {
                     'analysis_type': 'sequencing_experiment',
@@ -146,10 +152,12 @@ def main(args):
         },
         'files': [],
         'samples': get_sample_info(seq_experiment_analysis_dict.get('samples')),
-        'experiment': {} #,
-        # 'read_group_count': seq_experiment_analysis_dict.get('read_group_count'),
-        # 'read_groups': seq_experiment_analysis_dict.get('read_groups')
+        'experiment': {},
+        'read_group_count': seq_experiment_analysis_dict.get('read_group_count'),
+        'read_groups': seq_experiment_analysis_dict.get('read_groups')
     }
+    if args.genome_annotation:
+        payload['workflow']['genome_annotation'] = args.genome_annotation
 
     # pass `info` dict from seq_experiment payload to new payload
     if 'info' in seq_experiment_analysis_dict and isinstance(seq_experiment_analysis_dict['info'], dict):
@@ -183,10 +191,11 @@ def main(args):
     date_str = date.today().strftime("%Y%m%d")
     for f in args.files_to_upload:
         renamed_file = rename_file(f, payload, rg_count, seq_experiment_analysis_dict['samples'], date_str)
-        payload['files'].append(get_files_info(renamed_file,updated_pipeline_info))
+        payload['files'].append(get_files_info(renamed_file))
 
-    with open("%s.rna_alignment.payload.json" % str(uuid.uuid4()), 'w') as f:
+    with open("%s.%s.payload.json" % (str(uuid.uuid4()), args.wf_name.replace(" ","_")), 'w') as f:
         f.write(json.dumps(payload, indent=2))
+
 
 
 if __name__ == "__main__":
@@ -201,8 +210,8 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--wf_version", dest="wf_version", required=True, help="Workflow version")
     parser.add_argument("-r", "--wf_run", dest="wf_run", required=True, help="workflow run ID")
     parser.add_argument("-s", "--wf_session", dest="wf_session", required=True, help="workflow session ID")
-    parser.add_argument("-b", "--genome_build", dest="genome_build", default="GRCh38_Verily_v1", help="Genome build")
-    parser.add_argument("-n", "--genome_annotation", dest="genome_annotation", default="GENCODE v40", help="Genome annotation")
+    parser.add_argument("-b", "--genome_build", dest="genome_build", help="Genome build")
+    parser.add_argument("-n", "--genome_annotation", dest="genome_annotation", help="Genome annotation")
     parser.add_argument("-p", "--pipeline_yml", dest="pipeline_yml", required=False, help="Pipeline info in yaml")
     parser.add_argument("-c", "--read_group_count", dest="read_group_count", required=True,type=int,help="read_group_count")
 

@@ -19,9 +19,23 @@
                             "stage_input"
                         ]
                     },
+                    "payload/alignment": {
+                        "branch": "update_payload_2",
+                        "git_sha": "d681f92979ec587fa3a1b3cbf5b6cc1c619a2fb8",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
                     "payload/qcmetrics": {
-                        "branch": "update_payload",
-                        "git_sha": "0ba95ce908d9842b6087c39902b753c0b5f4b0a8",
+                        "branch": "update_payload_2",
+                        "git_sha": "d681f92979ec587fa3a1b3cbf5b6cc1c619a2fb8",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "payload/splicejunction": {
+                        "branch": "update_payload_2",
+                        "git_sha": "d681f92979ec587fa3a1b3cbf5b6cc1c619a2fb8",
                         "installed_by": [
                             "modules"
                         ]

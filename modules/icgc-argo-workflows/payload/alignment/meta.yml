@@ -1,12 +1,12 @@
-name: "payload_qcmetrics"
+name: "payload_alignment"
 description: |
-  Generate Song payload to submit for ICGC-ARGO QC metrics files
+  Generate Song payload to submit for ICGC-ARGO DNA/RNA alignment files
 keywords:
   - json
   - song
 tools:
-  - "payload_qcmetrics":
-      description: "A simple wrapper written in `nextflow` for the payload generation tool to generate ARGO Song payloads containing QC metrics files."
+  - "payload_alignment":
+      description: "A simple wrapper written in `nextflow` for the payload generation tool to generate ARGO Song payloads containing alignment files."
       licence: ["MIT"]
 
 input:
@@ -18,11 +18,7 @@ input:
 
   - files_to_upload:
       type: file
-      description: QC metrics files
-
-  - multiqc:
-      type: file
-      description: QC metrics in JSON format
+      description: alignment files (bam, bai / cram, crai)
 
   - metadata_analysis:
       type: file
@@ -49,7 +45,7 @@ output:
 
   - payload_files:
       type: file
-      description: Generated payload and QC files with normalized names
+      description: Generated payload and alignment files with normalized names
 
   - versions:
       type: file
@@ -59,4 +55,4 @@ output:
 
 
 authors:
-  - "@lindaxiang"
+  - "@guanqiaofeng"
