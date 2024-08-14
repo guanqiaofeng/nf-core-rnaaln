@@ -41,8 +41,8 @@
                         ]
                     },
                     "prep/metrics": {
-                        "branch": "main",
-                        "git_sha": "c041bcd0e203622a9ebebd720897d162a9ba95d7",
+                        "branch": "update_payload_2",
+                        "git_sha": "840aac9dffe16e09013b263b6982777d72860192",
                         "installed_by": [
                             "modules"
                         ]

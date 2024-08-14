@@ -30,7 +30,6 @@ tool_fieldmap = { # 'target name' : 'original name'
     'hisat2': {
         'paired_total' : 'paired_total',
         'unpaired_total' : 'unpaired_total'
-        # 'overall_alignment_rate' : 'overall_alignment_rate'  # collected from samtools stats
     },
     'star' : {
         'total_reads' : 'total_reads',
@@ -39,7 +38,6 @@ tool_fieldmap = { # 'target name' : 'original name'
         'avg_mapped_read_length' : 'avg_mapped_read_length',
         'num_splices' : 'num_splices',
         'num_annotated_splices' : 'num_annotated_splices',
-        # 'mismatch_rate' : 'mismatch_rate', # collected from samtools
         'pct_multimapped' : 'multimapped_percent'
     },
     'picard_RnaSeqMetrics': {
@@ -81,7 +79,7 @@ def get_mqc_stats(multiqc, sampleId):
     for f in sorted(glob(multiqc+'/*.txt')):
         for tool_metrics in tool_fieldmap.keys():
             if f.endswith(tool_metrics+'.txt'):
-                with open(f, 'r') as fn:
+                with open(f, 'r') as fn: 
                     mqc_stats[tool_metrics] = []
                     reader = csv.DictReader(fn, delimiter="\t")
                     for row in reader:
@@ -94,7 +92,7 @@ def get_mqc_stats(multiqc, sampleId):
 
     # convert the fraction to percentage for given fields
     for fn in fra2pct_fields:
-        if not mqc_stats['metrics'].get(fn):
+        if not mqc_stats['metrics'].get(fn): 
             print(f"Field '{fn}' not found in mqc_stats['metrics'] dictionary")
             continue
         new_value = round(float(mqc_stats['metrics'][fn]) * 100, 2)

@@ -27,6 +27,7 @@ from glob import glob
 import csv
 
 ga4gh_wgs_qc_metrics = [
+ 
    'insert_size_std_deviation',
    'mad_autosome_coverage',
    'mean_autosome_coverage',
@@ -79,7 +80,7 @@ def get_mqc_stats(multiqc, sampleId):
     for f in sorted(glob(multiqc+'/*.txt')):
       for tool_metrics in tool_fieldmap.keys():
         if f.endswith(tool_metrics+'.txt'):
-          with open(f, 'r') as fn:
+          with open(f, 'r') as fn: 
             mqc_stats[tool_metrics] = []
             reader = csv.DictReader(fn, delimiter="\t")
             for row in reader:
@@ -105,7 +106,7 @@ def get_mqc_stats(multiqc, sampleId):
         mqc_stats['metrics'].update({
           fn: new_value
         })
-
+    
     return mqc_stats
 
 def main():
@@ -119,7 +120,7 @@ def main():
     parser.add_argument("-q", "--qc_files", dest="qc_files", required=True, type=str, nargs="+", help="qc files")
 
     args = parser.parse_args()
-
+    
     # get tool_specific & aggregated metrics from multiqc
     mqc_stats = {}
     if args.multiqc:
@@ -132,7 +133,7 @@ def main():
         file_type = 'gatk_contamination'
         if file_type in mqc_stats: continue
         mqc_stats[file_type] = []
-        with open(fn, 'r') as f:
+        with open(fn, 'r') as f:     
           reader = csv.DictReader(f, delimiter="\t")
           for row in reader:
             mqc_stats[file_type].append(row)
@@ -155,7 +156,7 @@ def main():
     }
     for k,v in mqc_stats_updated.get('metrics', None).items():
         if not k in ga4gh_wgs_qc_metrics: continue
-        ga4gh_qc_dict['wgs_qc_metrics'].update({k: v})
+        ga4gh_qc_dict['wgs_qc_metrics'].update({k: v}) 
 
     if ga4gh_qc_dict['wgs_qc_metrics']:
       with open("%s.dnaaln.metrics.json" % (args.sampleId), 'w') as f:
