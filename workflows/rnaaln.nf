@@ -47,6 +47,7 @@ include { SONG_SCORE_UPLOAD as UPLOAD_QC_H } from '../subworkflows/icgc-argo-wor
 include { PREP_REF_TRANS } from '../subworkflows/local/gen_transcript_ref'
 include { CLEANUP as CLEAN_ALN_H} from '../modules/icgc-argo-workflows/cleanup/main'
 include { CLEANUP as CLEAN_ALN_S} from '../modules/icgc-argo-workflows/cleanup/main'
+include { CLEANUP as CLEAN_ALN_ST} from '../modules/icgc-argo-workflows/cleanup/main'
 // include { TAR } from '../modules/local/tar/main'
 
 
@@ -866,6 +867,8 @@ workflow RNAALN {
     // PAYLOAD_ALIGNMENT_H.out.payload_files.subscribe{ println("PAYLOAD_ALIGNMENT_H payload_files: ${it}") }
     // PAYLOAD_SPLICE_JUNCTION_H.out.payload_files.subscribe{ println("PAYLOAD_SPLICE_JUNCTION_H payload_files: ${it}") }
     // PAYLOAD_QCMETRICS_H.out.payload_files.subscribe{ println("PAYLOAD_QCMETRICS_H payload_files: ${it}") }
+    MERG_DUP_S.out.tmp_files.subscribe{ println("MERG_DUP_S tmp_files: ${it}") }
+    MERG_DUP_ST.out.tmp_files.subscribe{ println("MERG_DUP_ST tmp_files: ${it}") }
 
     if (params.tools.split(',').contains('cleanup')){
         if (params.samplesheet) {
@@ -887,11 +890,14 @@ workflow RNAALN {
             }
         }
         if ( params.tools.split(',').contains('star_aln') ){
+
+            merge_dup_ST = Channel.empty()
+            .mix(MERG_DUP_ST.out.tmp_files.collect())
+            .mix(MERG_DUP_ST.out.cram_alignment_index.map{meta,cram,crai -> cram}.collect())
+
             ch_cleanup_S=ch_cleanup_S
             .mix(MERG_DUP_S.out.tmp_files.collect())
-            .mix(MERG_DUP_ST.out.tmp_files.collect())
             .mix(MERG_DUP_S.out.cram_alignment_index.map{meta,cram,crai -> cram}.collect())
-            .mix(MERG_DUP_ST.out.cram_alignment_index.map{meta,cram,crai -> cram}.collect())
             .mix(MERGE_SPLICE_JUNCTION_S.out.all_novel_splice.map{meta,file -> file}.collect())
             .mix(star_qc_cleanup.collect())
             if (params.api_token){
@@ -903,12 +909,20 @@ workflow RNAALN {
 
                 CLEAN_ALN_S(
                     ch_cleanup_S.unique().collect(),
-                    UPLOAD_QC_S.out.analysis_id // what is it
+                    UPLOAD_QC_S.out.analysis_id
+                )
+                CLEAN_ALN_ST(
+                    merge_dup_ST.unique().collect(),
+                    UPLOAD_QC_S.out.analysis_id
                 )
             } else {
                 CLEAN_ALN_S(
                     ch_cleanup_S.unique().collect(),
-                    PREP_METRICS_S.out.metrics_json // what is it
+                    PREP_METRICS_S.out.metrics_json
+                )
+                CLEAN_ALN_ST(
+                    merge_dup_ST.unique().collect(),
+                    PREP_METRICS_S.out.metrics_json
                 )
             }
         }
@@ -926,12 +940,12 @@ workflow RNAALN {
 
                 CLEAN_ALN_H(
                     ch_cleanup_H.unique().collect(),
-                    UPLOAD_QC_H.out.analysis_id // what is it
+                    UPLOAD_QC_H.out.analysis_id
                 )
             } else {
                 CLEAN_ALN_H(
                     ch_cleanup_H.unique().collect(),
-                    PREP_METRICS_H.out.metrics_json // what is it
+                    PREP_METRICS_H.out.metrics_json
                 )
             }
         }
