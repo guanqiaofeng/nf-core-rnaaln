@@ -22,8 +22,8 @@ include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_H } from '../modules/icgc-argo-
 include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_ST } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
-include { NOVEL_SPLICE_MERGE as NOVEL_SPLICE_MERGE_S } from '../modules/local/novelsplice/main.nf'
-include { NOVEL_SPLICE_MERGE as NOVEL_SPLICE_MERGE_H } from '../modules/local/novelsplice/main.nf'
+include { MERGE_SPLICE_JUNCTION as MERGE_SPLICE_JUNCTION_S } from '../modules/local/merge_splice_junction/main.nf'
+include { MERGE_SPLICE_JUNCTION as MERGE_SPLICE_JUNCTION_H } from '../modules/local/merge_splice_junction/main.nf'
 // include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_S } from '../modules/local/payload/novel_splice/main'
 // include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_H } from '../modules/local/payload/novel_splice/main'
 include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_S } from '../modules/icgc-argo-workflows/payload/splicejunction/main'
@@ -45,6 +45,8 @@ include { PAYLOAD_QCMETRICS as  PAYLOAD_QCMETRICS_H} from '../modules/icgc-argo-
 include { SONG_SCORE_UPLOAD as UPLOAD_QC_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_QC_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { PREP_REF_TRANS } from '../subworkflows/local/gen_transcript_ref'
+include { CLEANUP as CLEAN_ALN_H} from '../modules/icgc-argo-workflows/cleanup/main'
+include { CLEANUP as CLEAN_ALN_S} from '../modules/icgc-argo-workflows/cleanup/main'
 // include { TAR } from '../modules/local/tar/main'
 
 
@@ -104,7 +106,7 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(MERG_DUP_H.out.versions)
 
-        MERG_DUP_H.out.cram_alignment_index.map { meta, cram, crai -> [meta, cram] }.subscribe{ println("MERGE dup no crai: ${it}") }
+        // MERG_DUP_H.out.cram_alignment_index.map { meta, cram, crai -> [meta, cram] }.subscribe{ println("MERGE dup no crai: ${it}") }
 
         // Combine channels to determine upload status and payload creation
         MERG_DUP_H.out.cram_alignment_index
@@ -199,11 +201,11 @@ workflow RNAALN {
         }.set{ch_h_txts}
 
         // MERG splice junctions in sample level
-        NOVEL_SPLICE_MERGE_H(ch_h_txts)
-        ch_versions = ch_versions.mix(NOVEL_SPLICE_MERGE_H.out.versions)
+        MERGE_SPLICE_JUNCTION_H(ch_h_txts)
+        ch_versions = ch_versions.mix(MERGE_SPLICE_JUNCTION_H.out.versions)
 
         // Combine channels to determine upload status and payload creation
-        NOVEL_SPLICE_MERGE_H.out.all_novel_splice
+        MERGE_SPLICE_JUNCTION_H.out.all_novel_splice
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
         .combine(
@@ -331,7 +333,7 @@ workflow RNAALN {
         .set{ch_h_prep_metrics}
 
         // ch_h_prep_metrics.subscribe { println("prep metrics input: ${it}") }
-        ch_h_prep_metrics.subscribe { println("Multiqc_FILES input: ${it}") }
+        // ch_h_prep_metrics.subscribe { println("Multiqc_FILES input: ${it}") }
 
         PREP_METRICS_H(
             ch_h_prep_metrics,
@@ -340,9 +342,9 @@ workflow RNAALN {
 
         // PREP_METRICS_H.out.metrics_json.subscribe { println("prep metrics output: ${it}") }
 
-        ch_h_prep_metrics.subscribe { println("prep metrics: ${it}") }
-        PREP_METRICS_H.out.metrics_json.subscribe { println("prep metrics out json: ${it}") }
-        MULTIQC_H.out.data.subscribe { println("multiQC: ${it}") }
+        // ch_h_prep_metrics.subscribe { println("prep metrics: ${it}") }
+        // PREP_METRICS_H.out.metrics_json.subscribe { println("prep metrics out json: ${it}") }
+        // MULTIQC_H.out.data.subscribe { println("multiQC: ${it}") }
 
         // TAR(ch_h_prep_metrics)
 
@@ -402,8 +404,15 @@ workflow RNAALN {
         }
         .set{ch_h_qcmetrics_payload}
 
+        Channel.empty()
+        .mix(SAMTOOLS_STATS_H.out.stats.map{meta,files -> files}.collect())
+        .mix(PICARD_COLLECTRNASEQMETRICS_H.out.metrics.map{meta,file -> file}.collect())
+        .mix(MULTIQC_H.out.data.collect())
+        .mix(PREP_METRICS_H.out.metrics_json.map{meta,file -> file}.collect())
+        .collect()
+        .set{hisat2_qc_cleanup}
 
-        ch_h_qcmetrics_payload.subscribe { println("prep payload input: ${it}") }
+        // ch_h_qcmetrics_payload.subscribe { println("prep payload input: ${it}") }
 
         PAYLOAD_QCMETRICS_H( // [val(meta) path(json), [path(picard_multiQC), path(hisat2_multiQC)], path(multiQC)]
             ch_h_qcmetrics_payload,
@@ -419,7 +428,7 @@ workflow RNAALN {
             )
         ch_versions = ch_versions.mix(PAYLOAD_QCMETRICS_H.out.versions)
 
-        PAYLOAD_QCMETRICS_H.out.payload_files.subscribe { println("Generated Payload: ${it}") }
+        // PAYLOAD_QCMETRICS_H.out.payload_files.subscribe { println("Generated Payload: ${it}") }
 
         // upload - qc metrics
         UPLOAD_QC_H(PAYLOAD_QCMETRICS_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
@@ -559,7 +568,7 @@ workflow RNAALN {
         // Upload files - alignment
         UPLOAD_ALIGNMENT_ST(PAYLOAD_ALIGNMENT_ST.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_ST.out.versions)
-        UPLOAD_ALIGNMENT_ST.out.analysis_id.subscribe { println("Upload Analysis Id STAR ST: ${it}") }
+        // UPLOAD_ALIGNMENT_ST.out.analysis_id.subscribe { println("Upload Analysis Id STAR ST: ${it}") }
 
 
         // Collect Splice Junctions
@@ -608,11 +617,11 @@ workflow RNAALN {
         }.set{ch_s_txts}
 
         // Merge novel splice sites
-        NOVEL_SPLICE_MERGE_S(ch_s_txts)
-        ch_versions = ch_versions.mix(NOVEL_SPLICE_MERGE_S.out.versions)
+        MERGE_SPLICE_JUNCTION_S(ch_s_txts)
+        ch_versions = ch_versions.mix(MERGE_SPLICE_JUNCTION_S.out.versions)
 
         // Combine channels to determine upload status and payload creation
-        NOVEL_SPLICE_MERGE_S.out.all_novel_splice
+        MERGE_SPLICE_JUNCTION_S.out.all_novel_splice
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
         .combine(
@@ -742,7 +751,7 @@ workflow RNAALN {
             []
         )
 
-        PREP_METRICS_S.out.metrics_json.subscribe { println("prep metrics output: ${it}") }
+        // PREP_METRICS_S.out.metrics_json.subscribe { println("prep metrics output: ${it}") }
 
         PICARD_COLLECTRNASEQMETRICS_S.out.metrics
         .combine(MULTIQC_S.out.picard_multi)
@@ -798,8 +807,23 @@ workflow RNAALN {
         }
         .set{ch_s_qcmetrics_payload}
 
+        // Channel.empty()
+        // .mix(SAMTOOLS_STATS_S.out.stats.map{meta,files -> files}.collect())
+        // .mix(PICARD_COLLECTRNASEQMETRICS_S.out.metrics.map{meta,file -> file}.collect())
+        // .mix(MULTIQC_S.out.data.collect())
+        // .mix(PREP_METRICS_S.out.metrics_json.map{meta,file -> file}.collect())
+        // .collect()
+        // .set{star_qc_cleanup}
 
-        ch_s_qcmetrics_payload.subscribe { println("prep payload input: ${it}") }
+        Channel.empty()
+        .mix(SAMTOOLS_STATS_S.out.stats.map{meta,files -> files}.collect())
+        .mix(PICARD_COLLECTRNASEQMETRICS_S.out.metrics.map{meta,file -> file}.collect())
+        .mix(MULTIQC_S.out.data.collect())
+        .mix(PREP_METRICS_S.out.metrics_json.map{meta,file -> file}.collect())
+        .collect()
+        .set{star_qc_cleanup}
+
+        // ch_s_qcmetrics_payload.subscribe { println("prep payload input: ${it}") }
 
         PAYLOAD_QCMETRICS_S( // [val(meta) path(json), [path(picard_multiQC), path(hisat2_multiQC)], path(multiQC)]
             ch_s_qcmetrics_payload,
@@ -815,20 +839,103 @@ workflow RNAALN {
             )
         ch_versions = ch_versions.mix(PAYLOAD_QCMETRICS_S.out.versions)
 
-        PAYLOAD_QCMETRICS_S.out.payload_files.subscribe { println("Generated Payload: ${it}") }
+        // PAYLOAD_QCMETRICS_S.out.payload_files.subscribe { println("Generated Payload: ${it}") }
 
         // upload - qc metrics
         UPLOAD_QC_S(PAYLOAD_QCMETRICS_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_QC_S.out.versions)
-
-
     }
-    // MERGE_SORT_DUP
+    // cleanup
+    // CLEAN_ALN_H(
+    //     hisat2_qc_cleanup.unique().collect(),
+    //     UPLOAD_QC_H.out.analysis_id // what is it
+    // )
 
+    // CLEAN_ALN_S(
+    //         star_qc_cleanup.unique().collect(),
+    //         UPLOAD_QC_S.out.analysis_id
+    //     )
+    // hisat2 trouble shoot
+    // STAGE_INPUT.out.meta_analysis.subscribe { println("STAGE_INPUT meta_analysis: ${it}") }
+    // STAGE_INPUT.out.meta_files.subscribe{ println("STAGE_INPUT meta_files: ${it}") }
+    // HISAT2_ALIGN.out.bam.subscribe{ println("HISAT2_ALIGN bam: ${it}") }
+    // MERG_DUP_H.out.tmp_files.subscribe{ println("MERG_DUP_H tmp_files: ${it}") }
+    // MERG_DUP_H.out.cram_alignment_index.subscribe{ println("MERG_DUP_H cram_alignment_index: ${it}") }
+    // MERGE_SPLICE_JUNCTION_H.out.all_novel_splice.subscribe{ println("MERGE_SPLICE_JUNCTION_H all_novel_splice: ${it}") }
+    // hisat2_qc_cleanup.subscribe{ println("hisat2_qc_cleanup: ${it}") }
+    // PAYLOAD_ALIGNMENT_H.out.payload_files.subscribe{ println("PAYLOAD_ALIGNMENT_H payload_files: ${it}") }
+    // PAYLOAD_SPLICE_JUNCTION_H.out.payload_files.subscribe{ println("PAYLOAD_SPLICE_JUNCTION_H payload_files: ${it}") }
+    // PAYLOAD_QCMETRICS_H.out.payload_files.subscribe{ println("PAYLOAD_QCMETRICS_H payload_files: ${it}") }
 
+    if (params.tools.split(',').contains('cleanup')){
+        if (params.samplesheet) {
+            ch_cleanup_H = Channel.empty()
+            ch_cleanup_S = Channel.empty()
+        } else {
+            if (params.tools.split(',').contains('hisat2_aln') && params.tools.split(',').contains('star_aln')){
+                ch_cleanup_H=Channel.empty()
+                    .mix(STAGE_INPUT.out.meta_analysis.map{meta,metadata -> metadata}.collect())
+                    .mix(STAGE_INPUT.out.meta_files.map{meta,files -> files}.flatten().collect())
+            } else if (params.tools.split(',').contains('hisat2_aln')) {
+                ch_cleanup_H=Channel.empty()
+                    .mix(STAGE_INPUT.out.meta_analysis.map{meta,metadata -> metadata}.collect())
+                    .mix(STAGE_INPUT.out.meta_files.map{meta,files -> files}.flatten().collect())
+            } else if (params.tools.split(',').contains('star_aln')) {
+                ch_cleanup_S=Channel.empty()
+                    .mix(STAGE_INPUT.out.meta_analysis.map{meta,metadata -> metadata}.collect())
+                    .mix(STAGE_INPUT.out.meta_files.map{meta,files -> files}.flatten().collect())
+            }
+        }
+        if ( params.tools.split(',').contains('star_aln') ){
+            ch_cleanup_S=ch_cleanup_S
+            .mix(MERG_DUP_S.out.tmp_files.collect())
+            .mix(MERG_DUP_ST.out.tmp_files.collect())
+            .mix(MERG_DUP_S.out.cram_alignment_index.map{meta,cram,crai -> cram}.collect())
+            .mix(MERG_DUP_ST.out.cram_alignment_index.map{meta,cram,crai -> cram}.collect())
+            .mix(MERGE_SPLICE_JUNCTION_S.out.all_novel_splice.map{meta,file -> file}.collect())
+            .mix(star_qc_cleanup.collect())
+            if (params.api_token){
+                ch_cleanup_S=ch_cleanup_S
+                .mix(PAYLOAD_ALIGNMENT_S.out.payload_files.map{meta,analysis,files -> files}.collect())
+                .mix(PAYLOAD_ALIGNMENT_ST.out.payload_files.map{meta,analysis,files -> files}.collect())
+                .mix(PAYLOAD_SPLICE_JUNCTION_S.out.payload_files.map{meta,analysis,files -> files}.collect())
+                .mix(PAYLOAD_QCMETRICS_S.out.payload_files.map{meta,analysis,files -> files}.collect())
 
+                CLEAN_ALN_S(
+                    ch_cleanup_S.unique().collect(),
+                    UPLOAD_QC_S.out.analysis_id // what is it
+                )
+            } else {
+                CLEAN_ALN_S(
+                    ch_cleanup_S.unique().collect(),
+                    PREP_METRICS_S.out.metrics_json // what is it
+                )
+            }
+        }
+        if ( params.tools.split(',').contains('hisat2_aln') ){
+            ch_cleanup_H=ch_cleanup_H
+            .mix(MERG_DUP_H.out.tmp_files.collect())
+            .mix(MERG_DUP_H.out.cram_alignment_index.map{meta,cram,crai -> cram}.collect())
+            .mix(MERGE_SPLICE_JUNCTION_H.out.all_novel_splice.map{meta,file -> file}.collect())
+            .mix(hisat2_qc_cleanup.collect())
+            if (params.api_token){
+                ch_cleanup_H=ch_cleanup_H
+                .mix(PAYLOAD_ALIGNMENT_H.out.payload_files.map{meta,analysis,files -> files}.collect())
+                .mix(PAYLOAD_SPLICE_JUNCTION_H.out.payload_files.map{meta,analysis,files -> files}.collect())
+                .mix(PAYLOAD_QCMETRICS_H.out.payload_files.map{meta,analysis,files -> files}.collect())
 
-    //Markduplicate
+                CLEAN_ALN_H(
+                    ch_cleanup_H.unique().collect(),
+                    UPLOAD_QC_H.out.analysis_id // what is it
+                )
+            } else {
+                CLEAN_ALN_H(
+                    ch_cleanup_H.unique().collect(),
+                    PREP_METRICS_H.out.metrics_json // what is it
+                )
+            }
+        }
+    }
 
     emit:
     meta_analysis = STAGE_INPUT.out.meta_analysis // channel: /path/to/multiqc_report.html
@@ -837,6 +944,8 @@ workflow RNAALN {
 
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
 }
+
+            // .mix(HISAT2_ALIGN.out.bam.map{meta,file -> file}.flatten().collect())
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

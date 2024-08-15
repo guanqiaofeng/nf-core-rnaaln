@@ -1,4 +1,4 @@
-process NOVEL_SPLICE_MERGE {
+process MERGE_SPLICE_JUNCTION {
     tag "$meta.id"
     label 'process_high'
 

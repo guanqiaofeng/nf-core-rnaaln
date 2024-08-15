@@ -19,6 +19,13 @@
                             "stage_input"
                         ]
                     },
+                    "cleanup": {
+                        "branch": "main",
+                        "git_sha": "8d014598ef81d65bece3684bd67aef7afae2cda9",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
                     "payload/alignment": {
                         "branch": "update_payload_2",
                         "git_sha": "d681f92979ec587fa3a1b3cbf5b6cc1c619a2fb8",
