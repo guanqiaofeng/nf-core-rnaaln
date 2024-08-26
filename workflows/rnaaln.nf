@@ -113,10 +113,8 @@ workflow RNAALN {
         MERG_DUP_H.out.cram_alignment_index
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
-        .combine(
-            ch_ref.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
-        ).map{
-            meta,cram,crai,upRdpc,metaB,analysis,ref ->
+        .map{
+            meta,cram,crai,upRdpc,metaB,analysis ->
             [
                 [
                     id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
@@ -126,7 +124,8 @@ workflow RNAALN {
                     read_group:"${meta.read_group}",
                     data_type:"${meta.data_type}",
                     date : "${meta.date}",
-                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    genome_build: "${params.genome_build}",
+                    genome_annotation: "${params.genome_annotation}",
                     read_groups_count: "${meta.numLanes}",
                     study_id : "${meta.study_id}",
                     date :"${new Date().format("yyyyMMdd")}",
@@ -145,9 +144,9 @@ workflow RNAALN {
             .mix(STAGE_INPUT.out.versions)
             .mix(HISAT2_ALIGN.out.versions)
             .mix(MERG_DUP_H.out.versions)
-            .collectFile(name: 'collated_versions.yml'),
-            params.genome_build,
-            params.genome_annotation
+            .collectFile(name: 'collated_versions.yml')
+            // params.genome_build,
+            // params.genome_annotation
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
 
@@ -209,10 +208,8 @@ workflow RNAALN {
         MERGE_SPLICE_JUNCTION_H.out.all_novel_splice
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
-        .combine(
-            ch_ref.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
-        ).map{
-            meta,txt,upRdpc,metaB,analysis,ref ->
+        .map{
+            meta,txt,upRdpc,metaB,analysis ->
             [
                 [
                     id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
@@ -222,7 +219,8 @@ workflow RNAALN {
                     read_group:"${meta.read_group}",
                     data_type:"${meta.data_type}",
                     date : "${meta.date}",
-                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    genome_build: "${params.genome_build}",
+                    genome_annotation: "${params.genome_annotation}",
                     read_groups_count: "${meta.numLanes}",
                     study_id : "${meta.study_id}",
                     date :"${new Date().format("yyyyMMdd")}",
@@ -240,9 +238,7 @@ workflow RNAALN {
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
             .mix(HISAT2_ALIGN.out.versions)
-            .collectFile(name: 'collated_versions.yml'),
-            params.genome_build,
-            params.genome_annotation
+            .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_SPLICE_JUNCTION_H.out.versions)
 
@@ -380,10 +376,8 @@ workflow RNAALN {
         .combine(PREP_METRICS_H.out.metrics_json)
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
-        .combine(
-            ch_ref.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
-        ).map{
-            meta, qcfiles_to_upload, metaB, multiqc, upRdpc, metaC, meta_analysis, ref ->
+        .map{
+            meta, qcfiles_to_upload, metaB, multiqc, upRdpc, metaC, meta_analysis ->
             [
                 [
                     id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
@@ -393,7 +387,8 @@ workflow RNAALN {
                     read_group:"${meta.read_group}",
                     data_type:"${meta.data_type}",
                     date : "${meta.date}",
-                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    genome_build: "${params.genome_build}",
+                    genome_annotation: "${params.genome_annotation}",
                     read_groups_count: "${meta.read_groups_count}",
                     study_id : "${meta.study_id}",
                     date :"${new Date().format("yyyyMMdd")}",
@@ -423,9 +418,7 @@ workflow RNAALN {
             .mix(MERG_DUP_H.out.versions)
             .mix(PICARD_COLLECTRNASEQMETRICS_H.out.versions)
             .mix(MULTIQC_H.out.versions)
-            .collectFile(name: 'collated_versions.yml'),
-            params.genome_build,
-            params.genome_annotation
+            .collectFile(name: 'collated_versions.yml')
             )
         ch_versions = ch_versions.mix(PAYLOAD_QCMETRICS_H.out.versions)
 
@@ -465,10 +458,8 @@ workflow RNAALN {
         MERG_DUP_S.out.cram_alignment_index
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
-        .combine(
-            ch_ref.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
-        ).map{
-            meta,cram,crai,upRdpc,metaB,analysis,ref ->
+        .map{
+            meta,cram,crai,upRdpc,metaB,analysis ->
             [
                 [
                     id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
@@ -478,7 +469,8 @@ workflow RNAALN {
                     read_group:"${meta.read_group}",
                     data_type:"${meta.data_type}",
                     date : "${meta.date}",
-                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    genome_build: "${params.genome_build}",
+                    genome_annotation: "${params.genome_annotation}",
                     read_groups_count: "${meta.numLanes}",
                     study_id : "${meta.study_id}",
                     date :"${new Date().format("yyyyMMdd")}",
@@ -497,9 +489,7 @@ workflow RNAALN {
             .mix(STAGE_INPUT.out.versions)
             .mix(STAR_ALIGN.out.versions)
             .mix(MERG_DUP_S.out.versions)
-            .collectFile(name: 'collated_versions.yml'),
-            params.genome_build,
-            params.genome_annotation
+            .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_S.out.versions)
 
@@ -528,10 +518,8 @@ workflow RNAALN {
         MERG_DUP_ST.out.cram_alignment_index
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
-        .combine(
-            ch_ref_trans.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
-        ).map{
-            meta,cram,crai,upRdpc,metaB,analysis,ref ->
+        .map{
+            meta,cram,crai,upRdpc,metaB,analysis ->
             [
                 [
                     id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
@@ -541,7 +529,8 @@ workflow RNAALN {
                     read_group:"${meta.read_group}",
                     data_type:"${meta.data_type}",
                     date : "${meta.date}",
-                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    genome_build: "${params.genome_build}",
+                    genome_annotation: "${params.genome_annotation}",
                     read_groups_count: "${meta.numLanes}",
                     study_id : "${meta.study_id}",
                     date :"${new Date().format("yyyyMMdd")}",
@@ -560,9 +549,7 @@ workflow RNAALN {
             .mix(STAGE_INPUT.out.versions)
             .mix(STAR_ALIGN.out.versions)
             .mix(MERG_DUP_ST.out.versions)
-            .collectFile(name: 'collated_versions.yml'),
-            params.genome_build,
-            params.genome_annotation
+            .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_ST.out.versions)
 
@@ -625,10 +612,8 @@ workflow RNAALN {
         MERGE_SPLICE_JUNCTION_S.out.all_novel_splice
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
-        .combine(
-            ch_ref.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
-        ).map{
-            meta,txt,upRdpc,metaB,analysis,ref ->
+        .map{
+            meta,txt,upRdpc,metaB,analysis ->
             [
                 [
                     id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
@@ -638,7 +623,8 @@ workflow RNAALN {
                     read_group:"${meta.read_group}",
                     data_type:"${meta.data_type}",
                     date : "${meta.date}",
-                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    genome_build: "${params.genome_build}",
+                    genome_annotation: "${params.genome_annotation}",
                     read_groups_count: "${meta.numLanes}",
                     study_id : "${meta.study_id}",
                     date :"${new Date().format("yyyyMMdd")}",
@@ -656,9 +642,7 @@ workflow RNAALN {
             Channel.empty()
             .mix(STAGE_INPUT.out.versions)
             .mix(STAR_ALIGN.out.versions)
-            .collectFile(name: 'collated_versions.yml'),
-            params.genome_build,
-            params.genome_annotation
+            .collectFile(name: 'collated_versions.yml')
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_S.out.versions)
 
@@ -783,10 +767,8 @@ workflow RNAALN {
         .combine(PREP_METRICS_S.out.metrics_json)
         .combine(STAGE_INPUT.out.upRdpc)
         .combine(STAGE_INPUT.out.meta_analysis)
-        .combine(
-            ch_ref.map{ meta,files -> [files.findAll{ it.name.endsWith(".fasta") || it.name.endsWith(".fa") }]}.flatten().collect()
-        ).map{
-            meta, qcfiles_to_upload, metaB, multiqc, upRdpc, metaC, meta_analysis, ref ->
+        .map{
+            meta, qcfiles_to_upload, metaB, multiqc, upRdpc, metaC, meta_analysis ->
             [
                 [
                     id:"${meta.study_id}.${meta.patient}.${meta.sample}.${meta.experiment}",
@@ -796,7 +778,8 @@ workflow RNAALN {
                     read_group:"${meta.read_group}",
                     data_type:"${meta.data_type}",
                     date : "${meta.date}",
-                    genomeBuild: "${ref.getName()}".replaceAll(/.fasta$/,"").replaceAll(/.fa$/,""),
+                    genome_build: "${params.genome_build}",
+                    genome_annotation: "${params.genome_annotation}",
                     read_groups_count: "${meta.read_groups_count}",
                     study_id : "${meta.study_id}",
                     date :"${new Date().format("yyyyMMdd")}",
@@ -834,9 +817,7 @@ workflow RNAALN {
             .mix(MERG_DUP_S.out.versions)
             .mix(PICARD_COLLECTRNASEQMETRICS_S.out.versions)
             .mix(MULTIQC_S.out.versions)
-            .collectFile(name: 'collated_versions.yml'),
-            params.genome_build,
-            params.genome_annotation
+            .collectFile(name: 'collated_versions.yml')
             )
         ch_versions = ch_versions.mix(PAYLOAD_QCMETRICS_S.out.versions)
 
@@ -867,8 +848,8 @@ workflow RNAALN {
     // PAYLOAD_ALIGNMENT_H.out.payload_files.subscribe{ println("PAYLOAD_ALIGNMENT_H payload_files: ${it}") }
     // PAYLOAD_SPLICE_JUNCTION_H.out.payload_files.subscribe{ println("PAYLOAD_SPLICE_JUNCTION_H payload_files: ${it}") }
     // PAYLOAD_QCMETRICS_H.out.payload_files.subscribe{ println("PAYLOAD_QCMETRICS_H payload_files: ${it}") }
-    MERG_DUP_S.out.tmp_files.subscribe{ println("MERG_DUP_S tmp_files: ${it}") }
-    MERG_DUP_ST.out.tmp_files.subscribe{ println("MERG_DUP_ST tmp_files: ${it}") }
+    // MERG_DUP_S.out.tmp_files.subscribe{ println("MERG_DUP_S tmp_files: ${it}") }
+    // MERG_DUP_ST.out.tmp_files.subscribe{ println("MERG_DUP_ST tmp_files: ${it}") }
 
     if (params.tools.split(',').contains('cleanup')){
         if (params.samplesheet) {
@@ -913,7 +894,7 @@ workflow RNAALN {
                 )
                 CLEAN_ALN_ST(
                     merge_dup_ST.unique().collect(),
-                    UPLOAD_QC_S.out.analysis_id
+                    UPLOAD_ALIGNMENT_ST.out.analysis_id
                 )
             } else {
                 CLEAN_ALN_S(
@@ -922,7 +903,7 @@ workflow RNAALN {
                 )
                 CLEAN_ALN_ST(
                     merge_dup_ST.unique().collect(),
-                    PREP_METRICS_S.out.metrics_json
+                    PREP_METRICS_ST.out.metrics_json
                 )
             }
         }

@@ -12,8 +12,8 @@ process PAYLOAD_QCMETRICS {
     input:  // input, make update as needed
         tuple val(meta), path(files_to_upload), path(metadata_analysis), path(multiqc)
         path pipeline_yml
-        val genome_build
-        val genome_annotation
+        // val genome_build
+        // val genome_annotation
 
     output:  // output, make update as needed
         tuple val(meta), path("*.payload.json"), path("out/*"), emit: payload_files
@@ -30,8 +30,8 @@ process PAYLOAD_QCMETRICS {
         -w "${workflow.manifest.name}" \
         -s ${workflow.sessionId} \
         -v ${workflow.manifest.version} \
-        -b "${genome_build}" \
-        -n "${genome_annotation}" \
+        -b "${meta.genome_build}" \
+        -n "${meta.genome_annotation}" \
         $arg_pipeline_yml \
         $arg_multiqc
 
