@@ -27,7 +27,6 @@ workflow PREP_REF_TRANS {
     ch_versions = ch_versions.mix(SAMTOOLS_FAIDX.out.versions)
 
     trans_ref = GFFREAD.out.gffread_fasta.mix(SAMTOOLS_FAIDX.out.fai)
-    trans_ref.subscribe { println("PREP_TRAN_REF: ${it}") }
 
     emit:
     trans_ref = trans_ref

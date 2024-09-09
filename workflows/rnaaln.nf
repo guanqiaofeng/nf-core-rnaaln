@@ -11,21 +11,14 @@ include { STAR_ALIGN } from '../modules/local/star/align/main'
 include { MERGE_DUP as MERG_DUP_S } from '../subworkflows/icgc-argo-workflows/merge_dup/main'
 include { MERGE_DUP as MERG_DUP_ST } from '../subworkflows/icgc-argo-workflows/merge_dup/main'
 include { MERGE_DUP as MERG_DUP_H } from '../subworkflows/icgc-argo-workflows/merge_dup/main'
-// include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_S } from '../modules/local/payload/rnaseqalignment/main'
-// include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_ST } from '../modules/local/payload/rnaseqalignment/main'
-// include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_H } from '../modules/local/payload/rnaseqalignment/main'
-
 include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_S } from '../modules/icgc-argo-workflows/payload/alignment/main'
 include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_ST } from '../modules/icgc-argo-workflows/payload/alignment/main'
 include { PAYLOAD_ALIGNMENT as PAYLOAD_ALIGNMENT_H } from '../modules/icgc-argo-workflows/payload/alignment/main'
-
 include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_ST } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_ALIGNMENT_H } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
 include { MERGE_SPLICE_JUNCTION as MERGE_SPLICE_JUNCTION_S } from '../modules/local/merge_splice_junction/main.nf'
 include { MERGE_SPLICE_JUNCTION as MERGE_SPLICE_JUNCTION_H } from '../modules/local/merge_splice_junction/main.nf'
-// include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_S } from '../modules/local/payload/novel_splice/main'
-// include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_H } from '../modules/local/payload/novel_splice/main'
 include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_S } from '../modules/icgc-argo-workflows/payload/splicejunction/main'
 include { PAYLOAD_SPLICE_JUNCTION as PAYLOAD_SPLICE_JUNCTION_H } from '../modules/icgc-argo-workflows/payload/splicejunction/main'
 include { SONG_SCORE_UPLOAD as UPLOAD_NOVEL_SPLICE_S } from '../subworkflows/icgc-argo-workflows/song_score_upload/main'
@@ -36,8 +29,6 @@ include { SAMTOOLS_STATS as SAMTOOLS_STATS_S } from '../modules/nf-core/samtools
 include { SAMTOOLS_STATS as SAMTOOLS_STATS_H } from '../modules/nf-core/samtools/stats/main'
 include { MULTIQC as MULTIQC_S } from '../modules/nf-core/multiqc/main'
 include { MULTIQC as MULTIQC_H } from '../modules/nf-core/multiqc/main'
-// include { PREP_METRICS as PREP_METRICS_S } from '../modules/local/prep/rnametrics/main'
-// include { PREP_METRICS as PREP_METRICS_H } from '../modules/local/prep/rnametrics/main'
 include { PREP_METRICS as PREP_METRICS_S } from '../modules/icgc-argo-workflows/prep/metrics/main'
 include { PREP_METRICS as PREP_METRICS_H } from '../modules/icgc-argo-workflows/prep/metrics/main'
 include { PAYLOAD_QCMETRICS as  PAYLOAD_QCMETRICS_S} from '../modules/icgc-argo-workflows/payload/qcmetrics/main'
@@ -69,7 +60,6 @@ workflow RNAALN {
         )
 
     ch_versions = ch_versions.mix(STAGE_INPUT.out.versions)
-    // STAGE_INPUT.out.meta_files.subscribe { println("Meta Files Output: ${it}") }
 
     // Prepare reference file [meta fasta] [meta, fai]
     ch_ref = Channel.fromPath(params.reference_fasta)
@@ -77,10 +67,10 @@ workflow RNAALN {
                             .mix( Channel.fromPath(params.reference_fai)
                             .map{ path -> [ [id: 'fai'], path ] } )
 
-    // ch_ref_trans = Channel.fromPath(params.reference_trans_fasta)
-    //                         .map{ path -> [ [id: 'fasta'], path ] }
-    //                         .mix( Channel.fromPath(params.reference_trans_fai)
-    //                         .map{ path -> [ [id: 'fai'], path ] } )
+    ch_ref_trans = Channel.fromPath(params.reference_trans_fasta)
+                            .map{ path -> [ [id: 'fasta'], path ] }
+                            .mix( Channel.fromPath(params.reference_trans_fai)
+                            .map{ path -> [ [id: 'fai'], path ] } )
 
     // HISAT2 //
     if (params.tools.split(',').contains('hisat2_aln')){
@@ -106,8 +96,6 @@ workflow RNAALN {
             ch_ref
         )
         ch_versions = ch_versions.mix(MERG_DUP_H.out.versions)
-
-        // MERG_DUP_H.out.cram_alignment_index.map { meta, cram, crai -> [meta, cram] }.subscribe{ println("MERGE dup no crai: ${it}") }
 
         // Combine channels to determine upload status and payload creation
         MERG_DUP_H.out.cram_alignment_index
@@ -145,8 +133,6 @@ workflow RNAALN {
             .mix(HISAT2_ALIGN.out.versions)
             .mix(MERG_DUP_H.out.versions)
             .collectFile(name: 'collated_versions.yml')
-            // params.genome_build,
-            // params.genome_annotation
         )
         ch_versions = ch_versions.mix(PAYLOAD_ALIGNMENT_H.out.versions)
 
@@ -253,6 +239,7 @@ workflow RNAALN {
             Channel.fromPath(params.reference_fasta).map{ it -> [ [ id:'fasta' ], it ] }
         )
         ch_versions = ch_versions.mix(SAMTOOLS_STATS_H.out.versions)
+
         // Picard
         PICARD_COLLECTRNASEQMETRICS_H(
             MERG_DUP_H.out.cram_alignment_index,
@@ -262,15 +249,7 @@ workflow RNAALN {
             Channel.fromPath(params.rrna_intervals)
         )
 
-        // PICARD_COLLECTRNASEQMETRICS_H(
-        //     MERG_DUP_H.out.cram_alignment_index.map { meta, cram, crai -> [meta, cram] },
-        //     Channel.fromPath(params.ref_flat),
-        //     Channel.fromPath(params.reference_fasta),
-        //     Channel.fromPath(params.rrna_intervals)
-        // )
         ch_versions = ch_versions.mix(PICARD_COLLECTRNASEQMETRICS_H.out.versions)
-
-        // PICARD_COLLECTRNASEQMETRICS_H.out.metrics.subscribe { println("Picard metrics - HISAT2: ${it}") }
 
         // MultiQC
         ch_reports = (
@@ -296,17 +275,6 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(MULTIQC_H.out.versions)
 
-        // MULTIQC_H.out.report.subscribe { println("MultiQC report - HISAT2: ${it}") }
-        // MULTIQC_H.out.data.subscribe { println("MultiQC data - HISAT2: ${it}") }
-
-        // PICARD_COLLECTRNASEQMETRICS_H.out.metrics (meta, path)
-        // MULTIQC_H.out.picard_multi
-        // MULTIQC_H.out.hisat2_multi
-
-        // PICARD_COLLECTRNASEQMETRICS_H.out.metrics.subscribe { println("Picard output: ${it}") }
-        // MULTIQC_H.out.picard_multi.subscribe { println("MultiQC picard output: ${it}") }
-        // MULTIQC_H.out.hisat2_multi.subscribe { println("MultiQC hisat2 output: ${it}") }
-
         // metrics preparation
         PICARD_COLLECTRNASEQMETRICS_H.out.metrics
         .combine(MULTIQC_H.out.data)
@@ -329,23 +297,10 @@ workflow RNAALN {
         }
         .set{ch_h_prep_metrics}
 
-        // ch_h_prep_metrics.subscribe { println("prep metrics input: ${it}") }
-        // ch_h_prep_metrics.subscribe { println("Multiqc_FILES input: ${it}") }
-
         PREP_METRICS_H(
             ch_h_prep_metrics,
             []
         )
-
-        // PREP_METRICS_H.out.metrics_json.subscribe { println("prep metrics output: ${it}") }
-
-        // ch_h_prep_metrics.subscribe { println("prep metrics: ${it}") }
-        // PREP_METRICS_H.out.metrics_json.subscribe { println("prep metrics out json: ${it}") }
-        // MULTIQC_H.out.data.subscribe { println("multiQC: ${it}") }
-
-        // TAR(ch_h_prep_metrics)
-
-        // TAR.out.stats.subscribe { println("TAR: ${it}") }
 
         PICARD_COLLECTRNASEQMETRICS_H.out.metrics
         .combine(MULTIQC_H.out.picard_multi)
@@ -408,8 +363,6 @@ workflow RNAALN {
         .collect()
         .set{hisat2_qc_cleanup}
 
-        // ch_h_qcmetrics_payload.subscribe { println("prep payload input: ${it}") }
-
         PAYLOAD_QCMETRICS_H( // [val(meta) path(json), [path(picard_multiQC), path(hisat2_multiQC)], path(multiQC)]
             ch_h_qcmetrics_payload,
             Channel.empty()
@@ -422,11 +375,11 @@ workflow RNAALN {
             )
         ch_versions = ch_versions.mix(PAYLOAD_QCMETRICS_H.out.versions)
 
-        // PAYLOAD_QCMETRICS_H.out.payload_files.subscribe { println("Generated Payload: ${it}") }
-
         // upload - qc metrics
         UPLOAD_QC_H(PAYLOAD_QCMETRICS_H.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_QC_H.out.versions)
+
+        hisat2OutFlag_ch = UPLOAD_ALIGNMENT_H.out.analysis_id.concat(UPLOAD_NOVEL_SPLICE_H.out.analysis_id, UPLOAD_QC_H.out.analysis_id).collect()
     }
 
     // STAR //
@@ -496,7 +449,6 @@ workflow RNAALN {
         // Upload files - alignment
         UPLOAD_ALIGNMENT_S(PAYLOAD_ALIGNMENT_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_S.out.versions)
-        // UPLOAD_ALIGNMENT_S.out.analysis_id.subscribe { println("Upload Analysis Id: ${it}") }
 
         if (!binding.hasVariable('ch_ref_trans') || !ch_ref_trans) {
             // Prepare transcript fasta and fai
@@ -556,8 +508,6 @@ workflow RNAALN {
         // Upload files - alignment
         UPLOAD_ALIGNMENT_ST(PAYLOAD_ALIGNMENT_ST.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_ST.out.versions)
-        // UPLOAD_ALIGNMENT_ST.out.analysis_id.subscribe { println("Upload Analysis Id STAR ST: ${it}") }
-
 
         // Collect Splice Junctions
         STAR_ALIGN.out.spl_junc_tab.flatten().buffer( size: 2 )
@@ -657,13 +607,7 @@ workflow RNAALN {
             Channel.fromPath(params.reference_fasta).map{ it -> [ [ id:'fasta' ], it ] }
         )
         ch_versions = ch_versions.mix(SAMTOOLS_STATS_S.out.versions)
-        // Picard
-        // PICARD_COLLECTRNASEQMETRICS_S(
-        //     MERG_DUP_S.out.bam_post_dup,
-        //     Channel.fromPath(params.ref_flat),
-        //     Channel.fromPath(params.reference_fasta),
-        //     Channel.fromPath(params.rrna_intervals)
-        // )
+
         PICARD_COLLECTRNASEQMETRICS_S(
             MERG_DUP_S.out.cram_alignment_index,
             Channel.fromPath(params.ref_flat),
@@ -672,9 +616,6 @@ workflow RNAALN {
             Channel.fromPath(params.rrna_intervals)
         )
         ch_versions = ch_versions.mix(PICARD_COLLECTRNASEQMETRICS_S.out.versions)
-
-        // PICARD_COLLECTRNASEQMETRICS_S.out.metrics.subscribe { println("Picard output - STAR: ${it}") }
-
 
         // MultiQC
         ch_reports_s = (
@@ -704,9 +645,6 @@ workflow RNAALN {
         )
         ch_versions = ch_versions.mix(MULTIQC_S.out.versions)
 
-        // MULTIQC_S.out.report.subscribe { println("MultiQC report - STAR: ${it}") }
-        // MULTIQC_S.out.data.subscribe { println("MultiQC data - STAR: ${it}") }
-
         // Prepare Metrics
         PICARD_COLLECTRNASEQMETRICS_S.out.metrics
         .combine(MULTIQC_S.out.data)
@@ -729,14 +667,10 @@ workflow RNAALN {
         }
         .set{ch_s_prep_metrics}
 
-        // ch_s_prep_metrics.subscribe { println("prep metrics input: ${it}") }
-
         PREP_METRICS_S(
             ch_s_prep_metrics,
             []
         )
-
-        // PREP_METRICS_S.out.metrics_json.subscribe { println("prep metrics output: ${it}") }
 
         PICARD_COLLECTRNASEQMETRICS_S.out.metrics
         .combine(MULTIQC_S.out.picard_multi)
@@ -791,14 +725,6 @@ workflow RNAALN {
         }
         .set{ch_s_qcmetrics_payload}
 
-        // Channel.empty()
-        // .mix(SAMTOOLS_STATS_S.out.stats.map{meta,files -> files}.collect())
-        // .mix(PICARD_COLLECTRNASEQMETRICS_S.out.metrics.map{meta,file -> file}.collect())
-        // .mix(MULTIQC_S.out.data.collect())
-        // .mix(PREP_METRICS_S.out.metrics_json.map{meta,file -> file}.collect())
-        // .collect()
-        // .set{star_qc_cleanup}
-
         Channel.empty()
         .mix(SAMTOOLS_STATS_S.out.stats.map{meta,files -> files}.collect())
         .mix(PICARD_COLLECTRNASEQMETRICS_S.out.metrics.map{meta,file -> file}.collect())
@@ -806,8 +732,6 @@ workflow RNAALN {
         .mix(PREP_METRICS_S.out.metrics_json.map{meta,file -> file}.collect())
         .collect()
         .set{star_qc_cleanup}
-
-        // ch_s_qcmetrics_payload.subscribe { println("prep payload input: ${it}") }
 
         PAYLOAD_QCMETRICS_S( // [val(meta) path(json), [path(picard_multiQC), path(hisat2_multiQC)], path(multiQC)]
             ch_s_qcmetrics_payload,
@@ -821,35 +745,10 @@ workflow RNAALN {
             )
         ch_versions = ch_versions.mix(PAYLOAD_QCMETRICS_S.out.versions)
 
-        // PAYLOAD_QCMETRICS_S.out.payload_files.subscribe { println("Generated Payload: ${it}") }
-
         // upload - qc metrics
         UPLOAD_QC_S(PAYLOAD_QCMETRICS_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_QC_S.out.versions)
     }
-    // cleanup
-    // CLEAN_ALN_H(
-    //     hisat2_qc_cleanup.unique().collect(),
-    //     UPLOAD_QC_H.out.analysis_id // what is it
-    // )
-
-    // CLEAN_ALN_S(
-    //         star_qc_cleanup.unique().collect(),
-    //         UPLOAD_QC_S.out.analysis_id
-    //     )
-    // hisat2 trouble shoot
-    // STAGE_INPUT.out.meta_analysis.subscribe { println("STAGE_INPUT meta_analysis: ${it}") }
-    // STAGE_INPUT.out.meta_files.subscribe{ println("STAGE_INPUT meta_files: ${it}") }
-    // HISAT2_ALIGN.out.bam.subscribe{ println("HISAT2_ALIGN bam: ${it}") }
-    // MERG_DUP_H.out.tmp_files.subscribe{ println("MERG_DUP_H tmp_files: ${it}") }
-    // MERG_DUP_H.out.cram_alignment_index.subscribe{ println("MERG_DUP_H cram_alignment_index: ${it}") }
-    // MERGE_SPLICE_JUNCTION_H.out.all_novel_splice.subscribe{ println("MERGE_SPLICE_JUNCTION_H all_novel_splice: ${it}") }
-    // hisat2_qc_cleanup.subscribe{ println("hisat2_qc_cleanup: ${it}") }
-    // PAYLOAD_ALIGNMENT_H.out.payload_files.subscribe{ println("PAYLOAD_ALIGNMENT_H payload_files: ${it}") }
-    // PAYLOAD_SPLICE_JUNCTION_H.out.payload_files.subscribe{ println("PAYLOAD_SPLICE_JUNCTION_H payload_files: ${it}") }
-    // PAYLOAD_QCMETRICS_H.out.payload_files.subscribe{ println("PAYLOAD_QCMETRICS_H payload_files: ${it}") }
-    // MERG_DUP_S.out.tmp_files.subscribe{ println("MERG_DUP_S tmp_files: ${it}") }
-    // MERG_DUP_ST.out.tmp_files.subscribe{ println("MERG_DUP_ST tmp_files: ${it}") }
 
     if (params.tools.split(',').contains('cleanup')){
         if (params.samplesheet) {
@@ -860,6 +759,7 @@ workflow RNAALN {
                 ch_cleanup_H=Channel.empty()
                     .mix(STAGE_INPUT.out.meta_analysis.map{meta,metadata -> metadata}.collect())
                     .mix(STAGE_INPUT.out.meta_files.map{meta,files -> files}.flatten().collect())
+                ch_cleanup_S=Channel.empty()
             } else if (params.tools.split(',').contains('hisat2_aln')) {
                 ch_cleanup_H=Channel.empty()
                     .mix(STAGE_INPUT.out.meta_analysis.map{meta,metadata -> metadata}.collect())
@@ -921,7 +821,7 @@ workflow RNAALN {
 
                 CLEAN_ALN_H(
                     ch_cleanup_H.unique().collect(),
-                    UPLOAD_QC_H.out.analysis_id
+                    hisat2OutFlag_ch
                 )
             } else {
                 CLEAN_ALN_H(
@@ -939,8 +839,6 @@ workflow RNAALN {
 
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
 }
-
-            // .mix(HISAT2_ALIGN.out.bam.map{meta,file -> file}.flatten().collect())
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
