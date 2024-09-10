@@ -29,10 +29,6 @@ process HISAT2_ALIGN {
     def prefix = task.ext.prefix ?: "${meta.study_id}.${meta.patient}.${meta.sample}.${meta.id}"
     def VERSION = '2.2.1' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     def strandedness = meta.strandedness == 'forward' ? meta.single_end ? '--rna-strandness F' : '--rna-strandness FR' : meta.strandedness == 'reverse' ? meta.single_end ? '--rna-strandness R' : '--rna-strandness RF' : ''
-    // Calculate the midpoint of the reads array
-    // def mid = reads.size() / 2
-    // def reads1 = reads[0..<mid].join(',')
-    // def reads2 = reads[mid..<reads.size()].join(',')
     def reads1 = [], reads2 = [] // first half in reads1, second half in reads2
     meta.single_end ? [reads].flatten().each{reads1 << it} : reads.eachWithIndex{ v, ix -> (ix < reads.size() / 2 ? reads1 : reads2) << v }
 
@@ -69,5 +65,4 @@ process HISAT2_ALIGN {
     END_VERSIONS
     """
 }
-// echo "hisat2: $VERSION\nsamtools: \$(samtools --version | sed -n '1 s/^.*samtools //p')" > versions.yml
-// echo "hisat2: $VERSION\nsamtools: \$(samtools --version | sed 's/^.*samtools //; s/Using.*\$//')" > versions.yml
+

@@ -39,7 +39,6 @@ include { PREP_REF_TRANS } from '../subworkflows/local/gen_transcript_ref'
 include { CLEANUP as CLEAN_ALN_H} from '../modules/icgc-argo-workflows/cleanup/main'
 include { CLEANUP as CLEAN_ALN_S} from '../modules/icgc-argo-workflows/cleanup/main'
 include { CLEANUP as CLEAN_ALN_ST} from '../modules/icgc-argo-workflows/cleanup/main'
-// include { TAR } from '../modules/local/tar/main'
 
 
 /*
@@ -65,11 +64,6 @@ workflow RNAALN {
     ch_ref = Channel.fromPath(params.reference_fasta)
                             .map{ path -> [ [id: 'fasta'], path ] }
                             .mix( Channel.fromPath(params.reference_fai)
-                            .map{ path -> [ [id: 'fai'], path ] } )
-
-    ch_ref_trans = Channel.fromPath(params.reference_trans_fasta)
-                            .map{ path -> [ [id: 'fasta'], path ] }
-                            .mix( Channel.fromPath(params.reference_trans_fai)
                             .map{ path -> [ [id: 'fai'], path ] } )
 
     // HISAT2 //
@@ -305,8 +299,9 @@ workflow RNAALN {
         PICARD_COLLECTRNASEQMETRICS_H.out.metrics
         .combine(MULTIQC_H.out.picard_multi)
         .combine(MULTIQC_H.out.hisat2_multi)
+        .combine(MULTIQC_H.out.samtools_multi)
         .map{
-            meta, path, picard, hisat2 ->
+            meta, path, picard, hisat2, samtools ->
             [
                 [
                     id:"${meta.study_id}.${meta.patient}.${meta.sample}",
@@ -319,7 +314,7 @@ workflow RNAALN {
                     data_type:"${meta.data_type}",
                     date : "${meta.date}",
                     read_groups_count: "${meta.read_groups_count}"
-                ],[picard, hisat2]
+                ],[picard, hisat2, samtools]
             ]
         }
         .set{ch_h_prep_metrics_files}
@@ -450,7 +445,15 @@ workflow RNAALN {
         UPLOAD_ALIGNMENT_S(PAYLOAD_ALIGNMENT_S.out.payload_files) // [val(meta), path("*.payload.json"), [path(CRAM),path(CRAI)]
         ch_versions = ch_versions.mix(UPLOAD_ALIGNMENT_S.out.versions)
 
-        if (!binding.hasVariable('ch_ref_trans') || !ch_ref_trans) {
+        // Transcriptome level alignment
+        // prepare transcriptome reference
+        if (params.reference_trans_fasta && params.reference_trans_fai) {
+            // if transcript fasta and fai provided, use them
+            ch_ref_trans = Channel.fromPath(params.reference_trans_fasta)
+                            .map{ path -> [ [id: 'fasta'], path ] }
+                            .mix( Channel.fromPath(params.reference_trans_fai)
+                            .map{ path -> [ [id: 'fai'], path ] } )
+        } else {
             // Prepare transcript fasta and fai
             PREP_REF_TRANS(
                 Channel.fromPath(params.reference_fasta), // path(fasta)
@@ -800,10 +803,6 @@ workflow RNAALN {
                 CLEAN_ALN_S(
                     ch_cleanup_S.unique().collect(),
                     PREP_METRICS_S.out.metrics_json
-                )
-                CLEAN_ALN_ST(
-                    merge_dup_ST.unique().collect(),
-                    PREP_METRICS_ST.out.metrics_json
                 )
             }
         }
